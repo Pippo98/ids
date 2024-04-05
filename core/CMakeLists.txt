@@ -9,3 +9,4 @@ include_directories(
 )
 
 add_executable(prj ${CDIR}/executables/prj/main.cpp)
+target_link_libraries(prj raylib)
