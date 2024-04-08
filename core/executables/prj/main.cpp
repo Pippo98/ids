@@ -3,12 +3,14 @@
 #include <stdio.h>
 
 #include "raylib.h"
+#include "agent/Agent.hpp"
 
 int main(void) {
   printf("IDS project\n");
 
   const int screenWidth = 800;
   const int screenHeight = 450;
+  const Agent agent  = Agent();
 
   InitWindow(screenWidth, screenHeight, "IDS");
 
@@ -40,11 +42,14 @@ int main(void) {
     DrawLine(-screenWidth * 10, (int)camera.target.y, screenWidth * 10,
              (int)camera.target.y, GREEN);
 
-    for (float i = 0; i < 1; i += 0.1) {
-      for (float j = 0; j < 10; j += 0.1) {
-        DrawEllipse(i * screenWidth, j * screenHeight, 10.0, 10.0, DARKGREEN);
-      }
-    }
+    DrawEllipse(0.0, 0.0, 10.0, 10.0, RED);
+    DrawEllipse(screenWidth/2.0, screenHeight / 2.0, 10.0, 10.0, GREEN);
+
+    // for (float i = 0; i < 1; i += 0.1) {
+    //   for (float j = 0; j < 10; j += 0.1) {
+    //     DrawEllipse(i * screenWidth + 5.0, j * screenHeight + 5.0, 10.0, 10.0, DARKGREEN);
+    //   }
+    // }
 
     EndMode2D();
 

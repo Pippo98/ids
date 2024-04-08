@@ -8,5 +8,21 @@ include_directories(
   ${CDIR}/src
 )
 
+add_library(agent)
+target_sources(
+  agent
+  PRIVATE
+  ${CDIR}/src/agent/Agent.cpp
+  )
+target_link_libraries(agent raylib)
+
+add_library(communication)
+target_sources(
+  communication
+  PRIVATE
+  ${CDIR}/src/communication/Broker.cpp
+  )
+target_link_libraries(communication raylib)
+
 add_executable(prj ${CDIR}/executables/prj/main.cpp)
-target_link_libraries(prj raylib)
+target_link_libraries(prj PUBLIC raylib agent)
