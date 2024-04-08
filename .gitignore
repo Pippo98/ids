@@ -35,3 +35,10 @@
 debug/
 release/
 bin/
+
+.cache/
+.vscode/
+build/
+cmake/
+
+.DS_Store

@@ -35,3 +35,6 @@ clean:
 		echo "removing release folder"; \
 		rm -r release;\
 	fi 
+
+setup:
+	cmake -S . -G "Unix Makefiles" -B cmake
