@@ -1,5 +1,8 @@
+#pragma once
+
 #include "raylib.h"
 #include "communication/Clients.hpp"
+#include "communication/Broker.hpp"
 
 // Class that handles computing logic for the single agent
 // Base Functions:
@@ -9,7 +12,7 @@
 
 class Agent: public ICommunicationClient {
 public:
-  Agent();
+  Agent(Broker *broker);
   Agent(Agent &&) = default;
   Agent(const Agent &) = default;
   Agent &operator=(Agent &&) = default;
@@ -20,10 +23,15 @@ public:
 
   // Function to call at every frame update
   // Used to calculate positions and communication signals
-  void Tick();
+  void Step();
+  Vector2 GetPosition() { return this->position; };
+  bool OnMessage() { return true; };
 
 private:
   Vector2 position;
+  Vector2 target;
+  Vector2 velocity = {0.1, 0.1};
   
+  Broker *broker;
 };
 

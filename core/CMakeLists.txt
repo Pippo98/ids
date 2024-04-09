@@ -14,7 +14,7 @@ target_sources(
   PRIVATE
   ${CDIR}/src/agent/Agent.cpp
   )
-target_link_libraries(agent raylib)
+target_link_libraries(agent raylib communication)
 
 add_library(communication)
 target_sources(
@@ -22,7 +22,7 @@ target_sources(
   PRIVATE
   ${CDIR}/src/communication/Broker.cpp
   )
-target_link_libraries(communication raylib)
+target_link_libraries(communication raylib agent)
 
 add_executable(prj ${CDIR}/executables/prj/main.cpp)
 target_link_libraries(prj PUBLIC raylib agent)

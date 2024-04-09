@@ -4,13 +4,14 @@
 
 #include "raylib.h"
 #include "agent/Agent.hpp"
+#include "communication/Broker.hpp"
+
 
 int main(void) {
   printf("IDS project\n");
 
   const int screenWidth = 800;
   const int screenHeight = 450;
-  const Agent agent  = Agent();
 
   InitWindow(screenWidth, screenHeight, "IDS");
 
@@ -21,6 +22,10 @@ int main(void) {
   camera.offset = (Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
   camera.rotation = 0.0f;
   camera.zoom = 1.0f;
+
+  Broker broker = Broker();
+  // Init Agents
+  Agent agent  = Agent(&broker);
 
   while (!WindowShouldClose()) {
     if (IsKeyDown(KEY_W))
@@ -34,6 +39,7 @@ int main(void) {
 
     camera.target.x = player.x;
     camera.target.y = player.y;
+    agent.Step();
 
     BeginDrawing();
 
@@ -42,8 +48,9 @@ int main(void) {
     DrawLine(-screenWidth * 10, (int)camera.target.y, screenWidth * 10,
              (int)camera.target.y, GREEN);
 
-    DrawEllipse(0.0, 0.0, 10.0, 10.0, RED);
+    DrawEllipse(agent.GetPosition().x, agent.GetPosition().y, 10.0, 10.0, RED);
     DrawEllipse(screenWidth/2.0, screenHeight / 2.0, 10.0, 10.0, GREEN);
+    DrawEllipse(0, 0, 10.0, 10.0, GREEN);
 
     // for (float i = 0; i < 1; i += 0.1) {
     //   for (float j = 0; j < 10; j += 0.1) {
