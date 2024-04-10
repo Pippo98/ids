@@ -1,14 +1,8 @@
 #pragma once
 
-#include "communication/Broker.hpp"
 #include "communication/Clients.hpp"
 #include "raylib.h"
 
-// Class that handles computing logic for the single agent
-// Base Functions:
-// - Communicate position to other actors
-// - Listen for position from other actors and start compunting new target spot
-// - Handle agent movement (No render)
 /**
  * Agent class
  * This class represents an agent in the simulation
@@ -26,7 +20,7 @@ class Agent : public ICommunicationClient {
    * @param Broker: Broker instance to communicate with other actors
    */
 
-  Agent(Vector3, Broker *);
+  Agent(Vector3, class Broker *);
 
   /**
    * Internal step function
@@ -70,26 +64,26 @@ class Agent : public ICommunicationClient {
   Vector3 position;
 
   // Current moving velocity of Agent
-  Vector3 velocity = {0.1, 0.1, 0.1};
+  // Vector3 velocity = {0.1, 0.1, 0.1};
 
   // Target position for the agent to move to
-  Vector3 targetPosition;
+  // Vector3 targetPosition;
 
   // Broker instance used to communicate with other actors in World
-  Broker *broker;
+  class Broker *broker;
 
  public:
   /**
    * Default Constructors
    */
-  Agent(Agent &&) = default;
-  Agent(const Agent &) = default;
+  // Agent(Agent &&) = default;
+  // Agent(const Agent &) = default;
 
   /**
    * Default Operators
    */
-  Agent &operator=(Agent &&) = default;
-  Agent &operator=(const Agent &) = default;
+  // Agent &operator=(Agent &&) = default;
+  // Agent &operator=(const Agent &) = default;
 
   /**
    * Destructor Definition

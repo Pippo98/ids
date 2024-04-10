@@ -33,4 +33,4 @@ target_sources(
 target_link_libraries(world raylib agent communication)
 
 add_executable(prj ${CDIR}/executables/prj/main.cpp)
-target_link_libraries(prj PUBLIC raylib agent)
+target_link_libraries(prj PUBLIC raylib agent communication)
