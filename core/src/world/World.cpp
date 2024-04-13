@@ -1,6 +1,7 @@
 #include "World.hpp"
 
 #include <agent/Agent.hpp>
+#include <cstdlib>
 
 World::World(int n_agents) {
   // Initialize Broker

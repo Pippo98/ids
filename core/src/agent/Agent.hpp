@@ -19,7 +19,6 @@ class Agent : public ICommunicationClient {
    * @param Vector3: Initial position
    * @param Broker: Broker instance to communicate with other actors
    */
-
   Agent(Vector3, class Broker *);
 
   /**
@@ -57,7 +56,7 @@ class Agent : public ICommunicationClient {
   Vector3 GetPosition() { return this->position; };
 
   // Interface GetPosition implementation
-  Vector3 GetClientPosition() override { return this->position; };
+  Vector3 GetClientPosition() override { return GetPosition(); };
 
  private:
   // Current exact position of Agent

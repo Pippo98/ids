@@ -22,7 +22,7 @@ int main(void) {
 
   Broker broker = Broker();
   // Init Agents
-  // Agent agent  = Agent(&broker);
+  Agent agent = Agent(Vector3(), &broker);
 
   while (!WindowShouldClose()) {
     if (IsKeyDown(KEY_W))
