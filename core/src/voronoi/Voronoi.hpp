@@ -6,15 +6,27 @@
 
 class Voronoi {
  public:
+  Voronoi() = default;
+  Voronoi(Vector2 pos, double radius);
   void setPosition(Vector2 pos);
   void setMaxRadius(double radius);
 
   Vector2 getPosition() const { return pos; };
+  double getMaxRadius() const { return maxRadius; };
+
+  bool operator==(const Voronoi &other);
+
+  friend class VoronoiSolver;
+
+  struct segment_t {
+    Vector2 p1;
+    Vector2 p2;
+  };
 
  private:
   Vector2 pos;
   double maxRadius;
-  std::vector<Vector2> bounds;
+  std::vector<segment_t> bounds;
 };
 
 class VoronoiSolver {
@@ -25,5 +37,12 @@ class VoronoiSolver {
   bool solve();
 
  private:
+  void findIntersections();
+
+ private:
+  struct cache_t {
+    unsigned int visisted : 1;
+  };
   std::vector<Voronoi> cells;
+  std::vector<std::vector<cache_t>> cache;
 };

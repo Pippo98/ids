@@ -32,5 +32,12 @@ target_sources(
   )
 target_link_libraries(world raylib agent communication)
 
+add_library(voronoi)
+target_sources(
+    voronoi
+    PRIVATE
+    ${CDIR}/src/voronoi/Voronoi.cpp
+)
+
 add_executable(prj ${CDIR}/executables/prj/main.cpp)
-target_link_libraries(prj PUBLIC raylib agent communication)
+target_link_libraries(prj PUBLIC raylib agent communication voronoi)
