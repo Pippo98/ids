@@ -44,5 +44,4 @@ class VoronoiSolver {
     unsigned int visisted : 1;
   };
   std::vector<Voronoi> cells;
-  std::vector<std::vector<cache_t>> cache;
 };

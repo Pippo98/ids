@@ -70,9 +70,8 @@ void VoronoiSolver::findIntersections() {
                   median.y + h * (v2.pos.x - v1.pos.x) / dist);
       v1.bounds.push_back(Voronoi::segment_t{intersection1, intersection2});
     }
-
-    delete[] cache;
   }
+  delete[] cache;
 }
 
 bool VoronoiSolver::solve() {
