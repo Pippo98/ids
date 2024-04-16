@@ -46,21 +46,22 @@ void VoronoiSolver::findIntersections() {
       }
       auto &v1 = cells[i];
       auto &v2 = cells[j];
-      // too distant
       float dist = Vector2Distance(v1.pos, v2.pos);
+      // Coincident
       if (dist == 0) {
         continue;
-      } else if (dist >= v1.maxRadius + v2.maxRadius) {
+      } else if (dist >= v1.maxRadius + v2.maxRadius) {  // Too distant
         continue;
       } else if (dist <=
                  std::abs(v1.maxRadius -
-                          v2.maxRadius)) {  // one circle inside another and no
+                          v2.maxRadius)) {  // One circle inside another and no
                                             // possible intersection
+        continue;
       }
-      Vector2 median = Vector2MoveTowards(v1.pos, v2.pos, dist);
       double a = (std::pow(v1.maxRadius, 2) - std::pow(v2.maxRadius, 2) +
                   std::pow(dist, 2)) /
                  (2 * dist);
+      Vector2 median = Vector2MoveTowards(v1.pos, v1.pos, a);
       double h = std::sqrt(std::pow(v1.maxRadius, 2) - std::pow(a, 2));
       Vector2 intersection1 =
           Vector2(median.x + h * (v2.pos.y - v1.pos.y) / dist,
