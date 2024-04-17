@@ -36,12 +36,14 @@ class VoronoiSolver {
 
   bool solve();
 
- private:
-  void findIntersections();
+  void draw() const;
 
  private:
-  struct cache_t {
-    unsigned int visisted : 1;
-  };
+  void findIntersections();
+  void removeBoundsIntersections();
+
+ private:
   std::vector<Voronoi> cells;
 };
+
+VoronoiSolver VoronoiTest();

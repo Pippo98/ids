@@ -3,6 +3,7 @@
 #include "agent/Agent.hpp"
 #include "communication/Broker.hpp"
 #include "raylib.h"
+#include "voronoi/Voronoi.hpp"
 
 int main(void) {
   printf("IDS project\n");
@@ -24,6 +25,8 @@ int main(void) {
   // Init Agents
   Agent agent = Agent(Vector3(), &broker);
 
+  VoronoiSolver solved = VoronoiTest();
+
   while (!WindowShouldClose()) {
     if (IsKeyDown(KEY_W))
       player.y -= 2;
@@ -42,13 +45,13 @@ int main(void) {
 
     ClearBackground(RAYWHITE);
     BeginMode2D(camera);
-    DrawLine(-screenWidth * 10, (int)camera.target.y, screenWidth * 10,
-             (int)camera.target.y, GREEN);
+    // DrawLine(-screenWidth * 10, (int)camera.target.y, screenWidth * 10,
+    //          (int)camera.target.y, GREEN);
 
     // DrawEllipse(agent.GetPosition().x, agent.GetPosition().y, 10.0, 10.0,
     // RED);
-    DrawEllipse(screenWidth / 2.0, screenHeight / 2.0, 10.0, 10.0, GREEN);
-    DrawEllipse(0, 0, 10.0, 10.0, GREEN);
+    // DrawEllipse(screenWidth / 2.0, screenHeight / 2.0, 10.0, 10.0, GREEN);
+    // DrawEllipse(0, 0, 10.0, 10.0, GREEN);
 
     // for (float i = 0; i < 1; i += 0.1) {
     //   for (float j = 0; j < 10; j += 0.1) {
@@ -56,6 +59,7 @@ int main(void) {
     //     + 5.0, 10.0, 10.0, DARKGREEN);
     //   }
     // }
+    solved.draw();
 
     EndMode2D();
 
