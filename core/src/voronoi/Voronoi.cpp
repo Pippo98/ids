@@ -164,10 +164,6 @@ void VoronoiSolver::draw() const {
 
     for (const auto &bound : cells[i].bounds) {
       DrawLine(bound.p1.x, bound.p1.y, bound.p2.x, bound.p2.y, BLUE);
-      // DrawLine(cells[i].pos.x, cells[i].pos.y, bound.p1.x, bound.p1.y,
-      // ORANGE); DrawLine(cells[i].pos.x, cells[i].pos.y, bound.p2.x,
-      // bound.p2.y,
-      //          DARKGREEN);
     }
   }
 }

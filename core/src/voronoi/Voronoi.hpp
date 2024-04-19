@@ -16,8 +16,10 @@ class Voronoi {
 
   bool operator==(const Voronoi &other);
 
-  friend class VoronoiSolver;
+  bool hasIntersection() const { return !bounds.empty(); }
+  Vector2 getCenterOfMass() const { return Vector2(); }
 
+  friend class VoronoiSolver;
   struct segment_t {
     Vector2 p1;
     Vector2 p2;
