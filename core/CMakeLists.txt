@@ -46,4 +46,4 @@ target_sources(
 )
 
 add_executable(prj ${CDIR}/executables/prj/main.cpp)
-target_link_libraries(prj PUBLIC raylib agent communication voronoi)
+target_link_libraries(prj PUBLIC raylib agent communication voronoi map)

@@ -1,14 +1,23 @@
 #include "Map.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <cstdio>
 
 template <typename ArrType>
-ArrType &mapAtIndex(ArrType *arr, size_t width, size_t column, size_t row) {
-  return arr[row * width + column];
+ArrType &Map::mapAtIndex(ArrType *arr, size_t x, size_t y) const {
+  return arr[y * sizeX + x];
+}
+template <typename ArrType>
+ArrType &Map::mapAtPosition(ArrType *arr, Vector2 position) const {
+  size_t x = mapX(position.x);
+  size_t y = mapY(position.y);
+  return mapAtIndex(arr, x, y);
 }
 
-Map::Map(Vector2 tl, Vector2 br, float resolution) {
-  sizeX = (br.x - tl.y) / resolution;
+Map::Map(Vector2 tl, Vector2 br, float resolution)
+    : tl(tl), br(br), resolution(resolution) {
+  sizeX = (br.x - tl.x) / resolution;
   sizeY = (tl.y - br.y) / resolution;
   confidenceMap = new float[sizeX * sizeY];
   tileTypeMap = new TileType[sizeX * sizeY];
@@ -26,23 +35,30 @@ Map::~Map() {
 }
 
 size_t Map::mapX(float x) const {
-  x = std::max(x, tl.x);
-  x = std::min(x, br.x);
-  return x / resolution;
+  x = std::clamp(x, tl.x, br.x);
+  x -= tl.x;
+  size_t idx = std::floor(x / resolution);
+  idx = std::clamp(idx, (size_t)0, sizeX - 1);
+  return idx;
 }
 size_t Map::mapY(float y) const {
-  y = std::max(y, br.x);
-  y = std::max(y, tl.x);
-  return y / resolution;
+  y = std::clamp(y, br.y, tl.y);
+  y -= br.y;
+  size_t idx = std::floor(y / resolution);
+  idx = std::clamp(idx, (size_t)0, sizeY - 1);
+  return idx;
 }
 
-TileType Map::getTileType(Vector2 position) const {
-  size_t x = mapX(position.x);
-  size_t y = mapY(position.y);
-  return mapAtIndex(tileTypeMap, sizeX, x, y);
-}
 float Map::getConfidence(Vector2 position) const {
-  size_t x = mapX(position.x);
-  size_t y = mapY(position.y);
-  return mapAtIndex(confidenceMap, sizeX, x, y);
+  return mapAtPosition(confidenceMap, position);
+}
+TileType Map::getTileType(Vector2 position) const {
+  return mapAtPosition(tileTypeMap, position);
+}
+
+void Map::setTileType(Vector2 position, TileType type) {
+  mapAtPosition(tileTypeMap, position) = type;
+}
+void Map::setConfidence(Vector2 position, float confidence) {
+  mapAtPosition(confidenceMap, position) = confidence;
 }
