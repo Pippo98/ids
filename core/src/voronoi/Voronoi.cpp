@@ -84,13 +84,6 @@ void VoronoiSolver::findIntersections() {
                             median.y - h * (v2.pos.x - v1.pos.x) / dist);
       Vector2 intersection2(median.x - h * (v2.pos.y - v1.pos.y) / dist,
                             median.y + h * (v2.pos.x - v1.pos.x) / dist);
-
-      double a1 = Vector2Angle(v1.pos, intersection1);
-      double a2 = Vector2Angle(v1.pos, intersection2);
-      // sort in anti clockwise direction
-      if (a1 > a2) {
-        std::swap(intersection1, intersection2);
-      }
       auto newBound1 = Voronoi::segment_t{intersection1, intersection2, v2};
       v1.bounds.push_back(newBound1);
       std::swap(intersection1, intersection2);
@@ -128,13 +121,23 @@ void VoronoiSolver::removeBoundsIntersections() {
           ac = (xy3 - xy1) / (xy2 - xy1);
           bd = (xy4 - xy3) / (xy2 - xy1);
         };
-        double a, b, c, d;
-        ABCD(b1.p1.x, b1.p2.x, b2.p1.x, b2.p2.x, a, b);
-        ABCD(b1.p1.y, b1.p2.y, b2.p1.y, b2.p2.y, c, d);
+
         Vector2 point;
-        double u = (c - a) / (b - d);
-        double t = a + u * b;
-        point = Vector2Lerp(b1.p1, b1.p2, t);
+        // b1 horizontal
+        if (FloatEquals(b1.p1.y, b1.p2.y)) {
+          double t = (b1.p1.y - b2.p1.y) / (b2.p2.y - b2.p1.y);
+          point = Vector2Lerp(b2.p1, b2.p2, t);
+        } else if (FloatEquals(b1.p1.y, b1.p2.y)) {
+          double t = (b1.p1.x - b2.p1.x) / (b2.p2.x - b2.p1.x);
+          point = Vector2Lerp(b2.p1, b2.p2, t);
+        } else {
+          double a, b, c, d;
+          ABCD(b1.p1.x, b1.p2.x, b2.p1.x, b2.p2.x, a, b);
+          ABCD(b1.p1.y, b1.p2.y, b2.p1.y, b2.p2.y, c, d);
+          double u = (c - a) / (b - d);
+          double t = a + u * b;
+          point = Vector2Lerp(b1.p1, b1.p2, t);
+        }
 
         auto &v1 = b1.intersectedWith;
         auto &v2 = b2.intersectedWith;
@@ -173,11 +176,11 @@ void VoronoiSolver::draw() const {
 VoronoiSolver VoronoiTest() {
   VoronoiSolver solver;
 
-  solver.addVoronoi(Vector2{400, 200}, 100);
-  solver.addVoronoi(Vector2{550, 250}, 100);
-  solver.addVoronoi(Vector2{450, 300}, 100);
-  solver.addVoronoi(Vector2{300, 350}, 100);
-  solver.addVoronoi(Vector2{480, 150}, 50);
+  solver.addVoronoi(Vector2{00, 00}, 100);
+  solver.addVoronoi(Vector2{100, 50}, 100);
+  solver.addVoronoi(Vector2{100, 170}, 100);
+  solver.addVoronoi(Vector2{0, -300}, 100);
+  solver.addVoronoi(Vector2{-80, 150}, 50);
 
   solver.solve();
 
