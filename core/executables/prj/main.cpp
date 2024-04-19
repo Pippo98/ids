@@ -3,6 +3,7 @@
 #include "agent/Agent.hpp"
 #include "communication/Broker.hpp"
 #include "raylib.h"
+#include "raymath.h"
 #include "voronoi/Voronoi.hpp"
 
 int main(void) {
@@ -13,26 +14,27 @@ int main(void) {
 
   InitWindow(screenWidth, screenHeight, "IDS");
 
-  Rectangle player = {400, 280, 40, 40};
+  Rectangle player = {0, 0, 0, 0};
   SetTargetFPS(60);
   Camera2D camera;
-  camera.target = (Vector2){player.x + 20.0f, player.y + 20.0f};
+  camera.target = (Vector2){player.x, player.y};
   camera.offset = (Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
   camera.rotation = 0.0f;
-  camera.zoom = 1.5f;
+  camera.zoom = 1.0f;
 
   Broker broker = Broker();
   // Init Agents
   Agent agent = Agent(Vector3(), &broker);
 
-  VoronoiSolver solved = VoronoiTest();
+  VoronoiSolver solver = VoronoiTest();
+  Voronoi &v1 = solver.addVoronoi(Vector2{0, 0}, 100);
 
   while (!WindowShouldClose()) {
     if (IsKeyDown(KEY_W))
       player.y -= 2;
     else if (IsKeyDown(KEY_S))
       player.y += 2;
-    else if (IsKeyDown(KEY_D))
+    if (IsKeyDown(KEY_D))
       player.x += 2;
     else if (IsKeyDown(KEY_A))
       player.x -= 2;
@@ -59,7 +61,9 @@ int main(void) {
     //     + 5.0, 10.0, 10.0, DARKGREEN);
     //   }
     // }
-    solved.draw();
+    v1.setPosition(Vector2Subtract(GetMousePosition(), camera.offset));
+    solver.draw();
+    solver.solve();
 
     EndMode2D();
 
