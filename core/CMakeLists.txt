@@ -38,6 +38,12 @@ target_sources(
     PRIVATE
     ${CDIR}/src/voronoi/Voronoi.cpp
 )
+add_library(map)
+target_sources(
+    map
+    PRIVATE
+    ${CDIR}/src/map/Map.cpp
+)
 
 add_executable(prj ${CDIR}/executables/prj/main.cpp)
 target_link_libraries(prj PUBLIC raylib agent communication voronoi)
