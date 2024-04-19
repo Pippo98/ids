@@ -22,6 +22,8 @@ bool Voronoi::operator==(const Voronoi &other) {
   return Vector2Equals(pos, other.pos) &&
          FloatEquals(maxRadius, other.maxRadius);
 }
+void Voronoi::setPosition(Vector2 _pos) { pos = _pos; }
+void Voronoi::setMaxRadius(double _radius) { maxRadius = _radius; }
 
 Voronoi &VoronoiSolver::addVoronoi(const Voronoi &voronoi) {
   cells.push_back(voronoi);
@@ -33,10 +35,10 @@ Voronoi &VoronoiSolver::addVoronoi(Vector2 position, double maxRadius) {
 
 const auto &cacheAt = [](cache_t *arr, const size_t &cols, const size_t &row,
                          const size_t &col) -> cache_t & {
-  return arr[row + cols * col];
+  return arr[row * cols + col];
 };
-const auto &cacheClear = [](cache_t *arr, const size_t &cols) {
-  memset(arr, 0, cols);
+const auto &cacheClear = [](cache_t *arr, const size_t &cols) -> void {
+  memset(arr, 0, cols * cols * sizeof(cache_t));
 };
 
 void VoronoiSolver::findIntersections() {
