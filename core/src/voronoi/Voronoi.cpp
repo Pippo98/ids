@@ -1,10 +1,12 @@
 #include "Voronoi.hpp"
 
 #include <raylib.h>
+#include <stdio.h>
 
 #include <cmath>
 #include <cstring>
 #include <span>
+#include <utility>
 
 #include "raymath.h"
 #include "src/raylib.h"
@@ -39,6 +41,7 @@ const auto &cacheClear = [](cache_t *arr, const size_t &cols) {
 
 void VoronoiSolver::findIntersections() {
   cache_t *cache = new cache_t[cells.size() * cells.size()];
+  cacheClear(cache, cells.size());
 
   for (auto &cell : cells) {
     cell.bounds.clear();
@@ -75,15 +78,22 @@ void VoronoiSolver::findIntersections() {
                  (2 * dist);
       Vector2 median = Vector2MoveTowards(v1.pos, v2.pos, a);
       double h = std::sqrt(std::pow(v1.maxRadius, 2) - std::pow(a, 2));
-      Vector2 intersection1 =
-          Vector2(median.x + h * (v2.pos.y - v1.pos.y) / dist,
-                  median.y - h * (v2.pos.x - v1.pos.x) / dist);
-      Vector2 intersection2 =
-          Vector2(median.x - h * (v2.pos.y - v1.pos.y) / dist,
-                  median.y + h * (v2.pos.x - v1.pos.x) / dist);
-      auto newBound = Voronoi::segment_t{intersection1, intersection2};
-      v1.bounds.push_back(newBound);
-      v2.bounds.push_back(newBound);
+      Vector2 intersection1(median.x + h * (v2.pos.y - v1.pos.y) / dist,
+                            median.y - h * (v2.pos.x - v1.pos.x) / dist);
+      Vector2 intersection2(median.x - h * (v2.pos.y - v1.pos.y) / dist,
+                            median.y + h * (v2.pos.x - v1.pos.x) / dist);
+
+      double a1 = Vector2Angle(v1.pos, intersection1);
+      double a2 = Vector2Angle(v1.pos, intersection2);
+      // sort in anti clockwise direction
+      if (a1 > a2) {
+        std::swap(intersection1, intersection2);
+      }
+      auto newBound1 = Voronoi::segment_t{intersection1, intersection2, v2};
+      v1.bounds.push_back(newBound1);
+      std::swap(intersection1, intersection2);
+      auto newBound2 = Voronoi::segment_t{intersection1, intersection2, v1};
+      v2.bounds.push_back(newBound2);
     }
   }
   delete[] cache;
@@ -97,6 +107,7 @@ void VoronoiSolver::removeBoundsIntersections() {
         if (j == k) {
           continue;
         }
+
         auto &b1 = bounds[j];
         auto &b2 = bounds[k];
 
@@ -122,13 +133,15 @@ void VoronoiSolver::removeBoundsIntersections() {
         double u = (c - a) / (b - d);
         double t = a + u * b;
         point = Vector2Lerp(b1.p1, b1.p2, t);
-        if (t < 0.5) {
+
+        auto &v1 = b1.intersectedWith;
+        auto &v2 = b2.intersectedWith;
+        if (Vector2Distance(b1.p1, v2.pos) < Vector2Distance(b1.p2, v2.pos)) {
           b1.p1 = point;
         } else {
           b1.p2 = point;
         }
-        point = Vector2Lerp(b2.p1, b2.p2, u);
-        if (u < 0.5) {
+        if (Vector2Distance(b2.p1, v1.pos) < Vector2Distance(b2.p2, v1.pos)) {
           b2.p1 = point;
         } else {
           b2.p2 = point;
@@ -151,6 +164,10 @@ void VoronoiSolver::draw() const {
 
     for (const auto &bound : cells[i].bounds) {
       DrawLine(bound.p1.x, bound.p1.y, bound.p2.x, bound.p2.y, BLUE);
+      // DrawLine(cells[i].pos.x, cells[i].pos.y, bound.p1.x, bound.p1.y,
+      // ORANGE); DrawLine(cells[i].pos.x, cells[i].pos.y, bound.p2.x,
+      // bound.p2.y,
+      //          DARKGREEN);
     }
   }
 }
@@ -161,6 +178,8 @@ VoronoiSolver VoronoiTest() {
   solver.addVoronoi(Vector2{400, 200}, 100);
   solver.addVoronoi(Vector2{550, 250}, 100);
   solver.addVoronoi(Vector2{450, 300}, 100);
+  solver.addVoronoi(Vector2{300, 350}, 100);
+  solver.addVoronoi(Vector2{480, 150}, 50);
 
   solver.solve();
 

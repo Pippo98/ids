@@ -21,6 +21,7 @@ class Voronoi {
   struct segment_t {
     Vector2 p1;
     Vector2 p2;
+    Voronoi &intersectedWith;
   };
 
  private:
