@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <ratio>
 #include <span>
 #include <utility>
 
@@ -24,7 +25,48 @@ bool Voronoi::operator==(const Voronoi &other) {
          FloatEquals(maxRadius, other.maxRadius);
 }
 void Voronoi::setPosition(Vector2 _pos) { pos = _pos; }
-void Voronoi::setMaxRadius(double _radius) { maxRadius = _radius; }
+void Voronoi::setMaxRadius(float _radius) { maxRadius = _radius; }
+
+Vector2 Voronoi::getCenterOfMass(const Map &map) const {
+  const float sampleAngleIncrement = 2 * PI / 50.0f;
+  const float sampleRadiusIncrement = 1.0f / 10.0f;
+  double mass = 0.0;
+  Vector2 CenterOfMass{0.0f, 0.0f};
+  for (float alpha = 0.0f; alpha < 2 * PI; alpha += sampleAngleIncrement) {
+    for (float rNorm = sampleAngleIncrement; rNorm <= 1.0f;
+         rNorm += sampleRadiusIncrement) {
+      bool intersects = false;
+
+      Vector2 sample{pos.x + std::sqrt(rNorm) * maxRadius * std::cos(alpha),
+                     pos.y + std::sqrt(rNorm) * maxRadius * std::sin(alpha)};
+
+      segment_t outOfVoronoi{pos, sample};
+      for (const auto &bound : bounds) {
+        if (SegmentsIntersects(bound.segment, outOfVoronoi)) {
+          intersects = true;
+          break;
+        }
+      }
+      if (intersects) {
+        continue;
+      }
+      DrawCircle(sample.x, sample.y, 1.0, BLACK);
+      // if (map.getTileType(sample) == TileType::OBSTACLE) {
+      //   continue;
+      // }
+      float density = 1.0 + map.getConfidence(sample);
+      mass += density;
+      printf("%f\n", density);
+      CenterOfMass.x += density * sample.x;
+      CenterOfMass.y += density * sample.y;
+    }
+  }
+  if (!FloatEquals(mass, 0.0f)) {
+    CenterOfMass.x /= mass;
+    CenterOfMass.y /= mass;
+  }
+  return CenterOfMass;
+}
 
 Voronoi &VoronoiSolver::addVoronoi(const Voronoi &voronoi) {
   cells.push_back(voronoi);
@@ -126,7 +168,7 @@ bool VoronoiSolver::solve() {
   return true;
 }
 
-void VoronoiSolver::draw() const {
+void VoronoiSolver::draw(const Map &map) const {
   for (size_t i = 0; i < cells.size(); ++i) {
     DrawCircleLines(cells[i].pos.x, cells[i].pos.y, cells[i].maxRadius, RED);
     DrawCircle(cells[i].pos.x, cells[i].pos.y, 2.0, RED);
@@ -135,6 +177,12 @@ void VoronoiSolver::draw() const {
       DrawLine(bound.segment.p1.x, bound.segment.p1.y, bound.segment.p2.x,
                bound.segment.p2.y, BLUE);
     }
+
+    Vector2 CenterOfMass = cells[i].getCenterOfMass(map);
+    if (i == 0) {
+      printf("%f %f\n", CenterOfMass.x, CenterOfMass.y);
+    }
+    DrawCircle(CenterOfMass.x, CenterOfMass.y, 3.0, DARKPURPLE);
   }
 }
 

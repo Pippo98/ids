@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "geometry/Geometry.hpp"
+#include "map/Map.hpp"
 #include "raylib.h"
 
 class Voronoi {
@@ -10,15 +11,15 @@ class Voronoi {
   Voronoi() = default;
   Voronoi(Vector2 pos, double radius);
   void setPosition(Vector2 pos);
-  void setMaxRadius(double radius);
+  void setMaxRadius(float radius);
 
   Vector2 getPosition() const { return pos; };
-  double getMaxRadius() const { return maxRadius; };
+  float getMaxRadius() const { return maxRadius; };
 
   bool operator==(const Voronoi &other);
 
   bool hasIntersection() const { return !bounds.empty(); }
-  Vector2 getCenterOfMass() const { return Vector2(); }
+  Vector2 getCenterOfMass(const Map &map) const;
 
   friend class VoronoiSolver;
   struct intersection_t {
@@ -28,7 +29,7 @@ class Voronoi {
 
  private:
   Vector2 pos;
-  double maxRadius;
+  float maxRadius;
   std::vector<intersection_t> bounds;
 };
 
@@ -39,7 +40,7 @@ class VoronoiSolver {
 
   bool solve();
 
-  void draw() const;
+  void draw(const Map &map) const;
 
  private:
   void findIntersections();
