@@ -18,6 +18,7 @@ class Voronoi {
 
   bool operator==(const Voronoi &other);
 
+  bool pointInVoronoi(const Vector2 &position) const;
   bool hasIntersection() const { return !bounds.empty(); }
   void calculateCenterOfMass(const Map &map) const;
   Vector2 getLastCenterOfMass() const { return centerOfMass; }
@@ -33,6 +34,9 @@ class Voronoi {
   Vector2 pos;
   float maxRadius;
   std::vector<intersection_t> bounds;
+
+ private:
+  float getDensity(const Map &map, const Vector2 &position) const;
 };
 
 class VoronoiSolver {

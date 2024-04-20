@@ -27,42 +27,48 @@ bool Voronoi::operator==(const Voronoi &other) {
 void Voronoi::setPosition(Vector2 _pos) { pos = _pos; }
 void Voronoi::setMaxRadius(float _radius) { maxRadius = _radius; }
 
+bool Voronoi::pointInVoronoi(const Vector2 &position) const {
+  segment_t outOfVoronoi{pos, position};
+  for (const auto &bound : bounds) {
+    if (SegmentsIntersects(bound.segment, outOfVoronoi)) {
+      return false;
+    }
+  }
+  return true;
+}
+float Voronoi::getDensity(const Map &map, const Vector2 &position) const {
+  return 1.0 + map.getConfidence(position);
+}
 void Voronoi::calculateCenterOfMass(const Map &map) const {
   const size_t radiusSamples = 10;
   const float sampleRadiusIncrement = 1.0f / radiusSamples;
   double mass = 0.0;
   centerOfMass = (Vector2){0.0f, 0.0f};
-  for (size_t radiusIndex = 1; radiusIndex <= radiusSamples; ++radiusIndex) {
+  for (size_t radiusIndex = 0; radiusIndex <= radiusSamples; ++radiusIndex) {
     float rNorm = sampleRadiusIncrement * radiusIndex;
     float radius = rNorm * maxRadius;
     float sampleAngleIncrement = 8.0 / radius;
 
     for (float alpha = 0.0f; alpha < 2 * PI; alpha += sampleAngleIncrement) {
-      bool intersects = false;
-
       Vector2 sample{pos.x + radius * std::cos(alpha),
                      pos.y + radius * std::sin(alpha)};
-
-      segment_t outOfVoronoi{pos, sample};
-      for (const auto &bound : bounds) {
-        if (SegmentsIntersects(bound.segment, outOfVoronoi)) {
-          intersects = true;
-          break;
-        }
-      }
-      if (intersects) {
-        continue;
-      }
-      DrawCircle(sample.x, sample.y, 1.0, BLACK);
       if (map.getTileType(sample) == TileType::OBSTACLE) {
         continue;
       }
-      float density = 1.0 + map.getConfidence(sample);
+      if (!pointInVoronoi(sample)) {
+        continue;
+      }
+      DrawCircle(sample.x, sample.y, 1.0, BLACK);
+      float density = getDensity(map, sample);
       mass += density;
       centerOfMass.x += density * sample.x;
       centerOfMass.y += density * sample.y;
+      if (radiusIndex == 0) {
+        break;
+      }
     }
   }
+
   if (!FloatEquals(mass, 0.0f)) {
     centerOfMass.x /= mass;
     centerOfMass.y /= mass;
