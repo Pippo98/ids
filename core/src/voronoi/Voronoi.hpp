@@ -2,8 +2,8 @@
 
 #include <vector>
 
+#include "geometry/Geometry.hpp"
 #include "raylib.h"
-#include "world/geometry/Geometry.hpp"
 
 class Voronoi {
  public:

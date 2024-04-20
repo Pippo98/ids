@@ -32,18 +32,28 @@ target_sources(
   )
 target_link_libraries(world raylib agent communication)
 
+add_library(geometry)
+target_sources(
+    geometry
+    PRIVATE
+    ${CDIR}/src/geometry/Geometry.cpp
+)
+target_link_libraries(geometry raylib)
+
 add_library(voronoi)
 target_sources(
     voronoi
     PRIVATE
     ${CDIR}/src/voronoi/Voronoi.cpp
 )
+target_link_libraries(voronoi raylib geometry)
 add_library(map)
 target_sources(
     map
     PRIVATE
     ${CDIR}/src/map/Map.cpp
 )
+target_link_libraries(map raylib)
 
 add_executable(prj ${CDIR}/executables/prj/main.cpp)
 target_link_libraries(prj PUBLIC raylib agent communication voronoi map)

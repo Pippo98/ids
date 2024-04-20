@@ -8,6 +8,7 @@
 #include <span>
 #include <utility>
 
+#include "geometry/Geometry.hpp"
 #include "raymath.h"
 #include "src/raylib.h"
 
@@ -63,33 +64,20 @@ void VoronoiSolver::findIntersections() {
       }
       auto &v1 = cells[i];
       auto &v2 = cells[j];
-      float dist = Vector2Distance(v1.pos, v2.pos);
-      // Coincident
-      if (dist == 0) {
-        continue;
-      } else if (dist >= v1.maxRadius + v2.maxRadius) {  // Too distant
-        continue;
-      } else if (dist <=
-                 std::abs(v1.maxRadius -
-                          v2.maxRadius)) {  // One circle inside another and no
-                                            // possible intersection
+
+      int intersectionNumber =
+          CirclesIntersects(v1.pos, v1.maxRadius, v2.pos, v2.maxRadius);
+      if (intersectionNumber != 2) {
         continue;
       }
-      double a = (std::pow(v1.maxRadius, 2) - std::pow(v2.maxRadius, 2) +
-                  std::pow(dist, 2)) /
-                 (2 * dist);
-      Vector2 median = Vector2MoveTowards(v1.pos, v2.pos, a);
-      double h = std::sqrt(std::pow(v1.maxRadius, 2) - std::pow(a, 2));
-      Vector2 intersection1(median.x + h * (v2.pos.y - v1.pos.y) / dist,
-                            median.y - h * (v2.pos.x - v1.pos.x) / dist);
-      Vector2 intersection2(median.x - h * (v2.pos.y - v1.pos.y) / dist,
-                            median.y + h * (v2.pos.x - v1.pos.x) / dist);
+
+      const auto &intersections =
+          CirclesIntersections(v1.pos, v1.maxRadius, v2.pos, v2.maxRadius);
       auto newBound1 =
-          Voronoi::intersection_t{{intersection1, intersection2}, v2};
+          Voronoi::intersection_t{{intersections[0], intersections[1]}, v2};
       v1.bounds.push_back(newBound1);
-      std::swap(intersection1, intersection2);
       auto newBound2 =
-          Voronoi::intersection_t{{intersection1, intersection2}, v1};
+          Voronoi::intersection_t{{intersections[1], intersections[0]}, v1};
       v2.bounds.push_back(newBound2);
     }
   }
@@ -108,44 +96,10 @@ void VoronoiSolver::removeBoundsIntersections() {
         auto &b1 = bounds[j];
         auto &b2 = bounds[k];
 
-        const auto &ccw = [](const Vector2 &p1, const Vector2 &p2,
-                             const Vector2 &p3) -> bool {
-          return (p3.y - p1.y) * (p2.x - p1.x) > (p2.y - p1.y) * (p3.x - p1.x);
-        };
-
-        if (ccw(b1.segment.p1, b2.segment.p1, b2.segment.p2) ==
-                ccw(b1.segment.p2, b2.segment.p1, b2.segment.p2) ||
-            ccw(b1.segment.p1, b1.segment.p2, b2.segment.p1) ==
-                ccw(b1.segment.p1, b1.segment.p2, b2.segment.p2)) {
+        if (!SegmentsIntersects(b1.segment, b2.segment)) {
           continue;
         }
-
-        const auto &ABCD = [](double xy1, double xy2, double xy3, double xy4,
-                              double &ac, double &bd) {
-          ac = (xy3 - xy1) / (xy2 - xy1);
-          bd = (xy4 - xy3) / (xy2 - xy1);
-        };
-
-        Vector2 point;
-        // b1 horizontal
-        if (FloatEquals(b1.segment.p1.y, b1.segment.p2.y)) {
-          double t = (b1.segment.p1.y - b2.segment.p1.y) /
-                     (b2.segment.p2.y - b2.segment.p1.y);
-          point = Vector2Lerp(b2.segment.p1, b2.segment.p2, t);
-        } else if (FloatEquals(b1.segment.p1.y, b1.segment.p2.y)) {
-          double t = (b1.segment.p1.x - b2.segment.p1.x) /
-                     (b2.segment.p2.x - b2.segment.p1.x);
-          point = Vector2Lerp(b2.segment.p1, b2.segment.p2, t);
-        } else {
-          double a, b, c, d;
-          ABCD(b1.segment.p1.x, b1.segment.p2.x, b2.segment.p1.x,
-               b2.segment.p2.x, a, b);
-          ABCD(b1.segment.p1.y, b1.segment.p2.y, b2.segment.p1.y,
-               b2.segment.p2.y, c, d);
-          double u = (c - a) / (b - d);
-          double t = a + u * b;
-          point = Vector2Lerp(b1.segment.p1, b1.segment.p2, t);
-        }
+        Vector2 point = SegmentIntersection(b1.segment, b2.segment);
 
         auto &v1 = b1.with;
         auto &v2 = b2.with;
