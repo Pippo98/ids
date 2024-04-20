@@ -27,18 +27,21 @@ bool Voronoi::operator==(const Voronoi &other) {
 void Voronoi::setPosition(Vector2 _pos) { pos = _pos; }
 void Voronoi::setMaxRadius(float _radius) { maxRadius = _radius; }
 
-Vector2 Voronoi::getCenterOfMass(const Map &map) const {
-  const float sampleAngleIncrement = 2 * PI / 50.0f;
-  const float sampleRadiusIncrement = 1.0f / 10.0f;
+void Voronoi::calculateCenterOfMass(const Map &map) const {
+  const size_t radiusSamples = 10;
+  const float sampleRadiusIncrement = 1.0f / radiusSamples;
   double mass = 0.0;
-  Vector2 CenterOfMass{0.0f, 0.0f};
-  for (float alpha = 0.0f; alpha < 2 * PI; alpha += sampleAngleIncrement) {
-    for (float rNorm = sampleAngleIncrement; rNorm <= 1.0f;
-         rNorm += sampleRadiusIncrement) {
+  centerOfMass = (Vector2){0.0f, 0.0f};
+  for (size_t radiusIndex = 1; radiusIndex <= radiusSamples; ++radiusIndex) {
+    float rNorm = sampleRadiusIncrement * radiusIndex;
+    float radius = rNorm * maxRadius;
+    float sampleAngleIncrement = 8.0 / radius;
+
+    for (float alpha = 0.0f; alpha < 2 * PI; alpha += sampleAngleIncrement) {
       bool intersects = false;
 
-      Vector2 sample{pos.x + std::sqrt(rNorm) * maxRadius * std::cos(alpha),
-                     pos.y + std::sqrt(rNorm) * maxRadius * std::sin(alpha)};
+      Vector2 sample{pos.x + radius * std::cos(alpha),
+                     pos.y + radius * std::sin(alpha)};
 
       segment_t outOfVoronoi{pos, sample};
       for (const auto &bound : bounds) {
@@ -51,21 +54,19 @@ Vector2 Voronoi::getCenterOfMass(const Map &map) const {
         continue;
       }
       DrawCircle(sample.x, sample.y, 1.0, BLACK);
-      // if (map.getTileType(sample) == TileType::OBSTACLE) {
-      //   continue;
-      // }
+      if (map.getTileType(sample) == TileType::OBSTACLE) {
+        continue;
+      }
       float density = 1.0 + map.getConfidence(sample);
       mass += density;
-      printf("%f\n", density);
-      CenterOfMass.x += density * sample.x;
-      CenterOfMass.y += density * sample.y;
+      centerOfMass.x += density * sample.x;
+      centerOfMass.y += density * sample.y;
     }
   }
   if (!FloatEquals(mass, 0.0f)) {
-    CenterOfMass.x /= mass;
-    CenterOfMass.y /= mass;
+    centerOfMass.x /= mass;
+    centerOfMass.y /= mass;
   }
-  return CenterOfMass;
 }
 
 Voronoi &VoronoiSolver::addVoronoi(const Voronoi &voronoi) {
@@ -168,7 +169,7 @@ bool VoronoiSolver::solve() {
   return true;
 }
 
-void VoronoiSolver::draw(const Map &map) const {
+void VoronoiSolver::draw() const {
   for (size_t i = 0; i < cells.size(); ++i) {
     DrawCircleLines(cells[i].pos.x, cells[i].pos.y, cells[i].maxRadius, RED);
     DrawCircle(cells[i].pos.x, cells[i].pos.y, 2.0, RED);
@@ -178,10 +179,7 @@ void VoronoiSolver::draw(const Map &map) const {
                bound.segment.p2.y, BLUE);
     }
 
-    Vector2 CenterOfMass = cells[i].getCenterOfMass(map);
-    if (i == 0) {
-      printf("%f %f\n", CenterOfMass.x, CenterOfMass.y);
-    }
+    Vector2 CenterOfMass = cells[i].getLastCenterOfMass();
     DrawCircle(CenterOfMass.x, CenterOfMass.y, 3.0, DARKPURPLE);
   }
 }

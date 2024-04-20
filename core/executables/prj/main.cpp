@@ -81,9 +81,14 @@ int main(void) {
     }
     Vector2 dimension{br.x - tl.x, tl.y - br.y};
     DrawRectangleLines(tl.x, br.y, dimension.x, dimension.y, BLACK);
+
     v1.setPosition(Vector2Subtract(GetMousePosition(), camera.offset));
-    solver.draw(map);
     solver.solve();
+
+    for (const auto &cell : solver.getCells()) {
+      cell.calculateCenterOfMass(map);
+    }
+    solver.draw();
 
     EndMode2D();
 

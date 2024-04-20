@@ -19,7 +19,8 @@ class Voronoi {
   bool operator==(const Voronoi &other);
 
   bool hasIntersection() const { return !bounds.empty(); }
-  Vector2 getCenterOfMass(const Map &map) const;
+  void calculateCenterOfMass(const Map &map) const;
+  Vector2 getLastCenterOfMass() const { return centerOfMass; }
 
   friend class VoronoiSolver;
   struct intersection_t {
@@ -28,6 +29,7 @@ class Voronoi {
   };
 
  private:
+  mutable Vector2 centerOfMass;
   Vector2 pos;
   float maxRadius;
   std::vector<intersection_t> bounds;
@@ -37,10 +39,10 @@ class VoronoiSolver {
  public:
   Voronoi &addVoronoi(const Voronoi &voronoi);
   Voronoi &addVoronoi(Vector2 position, double maxRadius);
+  const std::vector<Voronoi> &getCells() const { return cells; };
 
   bool solve();
-
-  void draw(const Map &map) const;
+  void draw() const;
 
  private:
   void findIntersections();
