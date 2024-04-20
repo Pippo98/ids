@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 
 template <typename ArrType>
 ArrType &Map::mapAtIndex(ArrType *arr, size_t x, size_t y) const {
@@ -21,6 +22,8 @@ Map::Map(Vector2 _tl, Vector2 _br, float resolution)
   sizeY = (tl.y - br.y) / resolution;
   confidenceMap = new float[sizeX * sizeY];
   tileTypeMap = new TileType[sizeX * sizeY];
+  memset(confidenceMap, 0, sizeX * sizeY * sizeof(float));
+  memset(tileTypeMap, (int)TileType::EMPTY, sizeX * sizeY * sizeof(TileType));
 }
 Map::Map(Vector2 tl, Vector2 br, size_t cols, size_t rows) {
   float horizontalResolution = (br.x - tl.x) / cols;
