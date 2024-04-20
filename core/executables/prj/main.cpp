@@ -1,7 +1,9 @@
+#include <raylib.h>
 #include <stdio.h>
 
 #include "agent/Agent.hpp"
 #include "communication/Broker.hpp"
+#include "map/Map.hpp"
 #include "raylib.h"
 #include "raymath.h"
 #include "voronoi/Voronoi.hpp"
@@ -22,6 +24,7 @@ int main(void) {
   camera.rotation = 0.0f;
   camera.zoom = 1.0f;
 
+  Map map((Vector2){-200, 200}, (Vector2){200, -200}, 5);
   Broker broker = Broker();
   // Init Agents
   Agent agent = Agent(Vector3(), &broker);
@@ -61,6 +64,23 @@ int main(void) {
     //     + 5.0, 10.0, 10.0, DARKGREEN);
     //   }
     // }
+    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+      Vector2 mouse = Vector2Subtract(GetMousePosition(), camera.offset);
+      map.setConfidence(mouse, map.getConfidence(mouse) + 10);
+    }
+    float res = map.getResolution();
+    Vector2 tl = map.getTopLeftCorner();
+    Vector2 br = map.getBottomRightCorner();
+    for (float x = tl.x; x < br.x; x += res) {
+      for (float y = br.y; y < tl.y; y += res) {
+        float conf = map.getConfidence((Vector2){x, y});
+        Color green = DARKGREEN;
+        green.a = conf;
+        DrawRectangle(x, y, res, res, green);
+      }
+    }
+    Vector2 dimension{br.x - tl.x, tl.y - br.y};
+    DrawRectangleLines(tl.x, br.y, dimension.x, dimension.y, BLACK);
     v1.setPosition(Vector2Subtract(GetMousePosition(), camera.offset));
     solver.draw();
     solver.solve();
