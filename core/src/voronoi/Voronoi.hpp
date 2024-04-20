@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "raylib.h"
+#include "world/geometry/Geometry.hpp"
 
 class Voronoi {
  public:
@@ -20,16 +21,15 @@ class Voronoi {
   Vector2 getCenterOfMass() const { return Vector2(); }
 
   friend class VoronoiSolver;
-  struct segment_t {
-    Vector2 p1;
-    Vector2 p2;
-    Voronoi &intersectedWith;
+  struct intersection_t {
+    segment_t segment;
+    Voronoi &with;
   };
 
  private:
   Vector2 pos;
   double maxRadius;
-  std::vector<segment_t> bounds;
+  std::vector<intersection_t> bounds;
 };
 
 class VoronoiSolver {

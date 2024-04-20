@@ -84,10 +84,12 @@ void VoronoiSolver::findIntersections() {
                             median.y - h * (v2.pos.x - v1.pos.x) / dist);
       Vector2 intersection2(median.x - h * (v2.pos.y - v1.pos.y) / dist,
                             median.y + h * (v2.pos.x - v1.pos.x) / dist);
-      auto newBound1 = Voronoi::segment_t{intersection1, intersection2, v2};
+      auto newBound1 =
+          Voronoi::intersection_t{{intersection1, intersection2}, v2};
       v1.bounds.push_back(newBound1);
       std::swap(intersection1, intersection2);
-      auto newBound2 = Voronoi::segment_t{intersection1, intersection2, v1};
+      auto newBound2 =
+          Voronoi::intersection_t{{intersection1, intersection2}, v1};
       v2.bounds.push_back(newBound2);
     }
   }
@@ -111,8 +113,10 @@ void VoronoiSolver::removeBoundsIntersections() {
           return (p3.y - p1.y) * (p2.x - p1.x) > (p2.y - p1.y) * (p3.x - p1.x);
         };
 
-        if (ccw(b1.p1, b2.p1, b2.p2) == ccw(b1.p2, b2.p1, b2.p2) ||
-            ccw(b1.p1, b1.p2, b2.p1) == ccw(b1.p1, b1.p2, b2.p2)) {
+        if (ccw(b1.segment.p1, b2.segment.p1, b2.segment.p2) ==
+                ccw(b1.segment.p2, b2.segment.p1, b2.segment.p2) ||
+            ccw(b1.segment.p1, b1.segment.p2, b2.segment.p1) ==
+                ccw(b1.segment.p1, b1.segment.p2, b2.segment.p2)) {
           continue;
         }
 
@@ -124,32 +128,38 @@ void VoronoiSolver::removeBoundsIntersections() {
 
         Vector2 point;
         // b1 horizontal
-        if (FloatEquals(b1.p1.y, b1.p2.y)) {
-          double t = (b1.p1.y - b2.p1.y) / (b2.p2.y - b2.p1.y);
-          point = Vector2Lerp(b2.p1, b2.p2, t);
-        } else if (FloatEquals(b1.p1.y, b1.p2.y)) {
-          double t = (b1.p1.x - b2.p1.x) / (b2.p2.x - b2.p1.x);
-          point = Vector2Lerp(b2.p1, b2.p2, t);
+        if (FloatEquals(b1.segment.p1.y, b1.segment.p2.y)) {
+          double t = (b1.segment.p1.y - b2.segment.p1.y) /
+                     (b2.segment.p2.y - b2.segment.p1.y);
+          point = Vector2Lerp(b2.segment.p1, b2.segment.p2, t);
+        } else if (FloatEquals(b1.segment.p1.y, b1.segment.p2.y)) {
+          double t = (b1.segment.p1.x - b2.segment.p1.x) /
+                     (b2.segment.p2.x - b2.segment.p1.x);
+          point = Vector2Lerp(b2.segment.p1, b2.segment.p2, t);
         } else {
           double a, b, c, d;
-          ABCD(b1.p1.x, b1.p2.x, b2.p1.x, b2.p2.x, a, b);
-          ABCD(b1.p1.y, b1.p2.y, b2.p1.y, b2.p2.y, c, d);
+          ABCD(b1.segment.p1.x, b1.segment.p2.x, b2.segment.p1.x,
+               b2.segment.p2.x, a, b);
+          ABCD(b1.segment.p1.y, b1.segment.p2.y, b2.segment.p1.y,
+               b2.segment.p2.y, c, d);
           double u = (c - a) / (b - d);
           double t = a + u * b;
-          point = Vector2Lerp(b1.p1, b1.p2, t);
+          point = Vector2Lerp(b1.segment.p1, b1.segment.p2, t);
         }
 
-        auto &v1 = b1.intersectedWith;
-        auto &v2 = b2.intersectedWith;
-        if (Vector2Distance(b1.p1, v2.pos) < Vector2Distance(b1.p2, v2.pos)) {
-          b1.p1 = point;
+        auto &v1 = b1.with;
+        auto &v2 = b2.with;
+        if (Vector2Distance(b1.segment.p1, v2.pos) <
+            Vector2Distance(b1.segment.p2, v2.pos)) {
+          b1.segment.p1 = point;
         } else {
-          b1.p2 = point;
+          b1.segment.p2 = point;
         }
-        if (Vector2Distance(b2.p1, v1.pos) < Vector2Distance(b2.p2, v1.pos)) {
-          b2.p1 = point;
+        if (Vector2Distance(b2.segment.p1, v1.pos) <
+            Vector2Distance(b2.segment.p2, v1.pos)) {
+          b2.segment.p1 = point;
         } else {
-          b2.p2 = point;
+          b2.segment.p2 = point;
         }
       }
     }
@@ -168,7 +178,8 @@ void VoronoiSolver::draw() const {
     DrawCircle(cells[i].pos.x, cells[i].pos.y, 2.0, RED);
 
     for (const auto &bound : cells[i].bounds) {
-      DrawLine(bound.p1.x, bound.p1.y, bound.p2.x, bound.p2.y, BLUE);
+      DrawLine(bound.segment.p1.x, bound.segment.p1.y, bound.segment.p2.x,
+               bound.segment.p2.y, BLUE);
     }
   }
 }
