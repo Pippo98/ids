@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 #include "raylib.h"
 
@@ -30,8 +31,8 @@ class Map {
   size_t sizeX;
   size_t sizeY;
 
-  float *confidenceMap;
-  TileType *tileTypeMap;
+  std::shared_ptr<float> confidenceMap;
+  std::shared_ptr<TileType> tileTypeMap;
 
  private:
   size_t mapX(float x) const;

@@ -24,7 +24,7 @@ int main(void) {
   camera.rotation = 0.0f;
   camera.zoom = 1.0f;
 
-  Map map((Vector2){-200, 200}, (Vector2){200, -200}, 5);
+  Map map((Vector2){-200, 200}, (Vector2){200, -200}, 10);
   Broker broker = Broker();
   // Init Agents
   Agent agent = Agent(Vector3(), &broker);
