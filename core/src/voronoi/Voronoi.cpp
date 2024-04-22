@@ -92,8 +92,8 @@ const auto &cacheClear = [](cache_t *arr, const size_t &cols) -> void {
 };
 
 void VoronoiSolver::findIntersections() {
-  // cache_t *cache = new cache_t[cells.size() * cells.size()];
-  // cacheClear(cache, cells.size());
+  cache_t *cache = new cache_t[cells.size() * cells.size()];
+  cacheClear(cache, cells.size());
 
   for (auto &cell : cells) {
     cell.bounds.clear();
@@ -104,13 +104,13 @@ void VoronoiSolver::findIntersections() {
       if (i == j) {
         continue;
       }
-      // cache_t &cacheEl = cacheAt(cache, cells.size(), i, j);
-      // if (cacheEl.visisted == 1) {
-      //   continue;
-      // } else {
-      //   cacheEl.visisted = 1;
-      //   cacheAt(cache, cells.size(), j, i).visisted = 1;
-      // }
+      cache_t &cacheEl = cacheAt(cache, cells.size(), i, j);
+      if (cacheEl.visisted == 1) {
+        continue;
+      } else {
+        cacheEl.visisted = 1;
+        cacheAt(cache, cells.size(), j, i).visisted = 1;
+      }
       auto &v1 = cells[i];
       auto &v2 = cells[j];
 
@@ -130,7 +130,7 @@ void VoronoiSolver::findIntersections() {
       v2.bounds.push_back(newBound2);
     }
   }
-  // delete[] cache;
+  delete[] cache;
 }
 
 void VoronoiSolver::removeBoundsIntersections() {

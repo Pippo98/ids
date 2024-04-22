@@ -28,13 +28,14 @@ int main(void) {
   camera.zoom = 1.0f;
 
   Map map((Vector2){-200, 200}, (Vector2){200, -200}, 5);
-  Broker broker = Broker();
+  Broker broker;
   // Init Agents
 
   VoronoiSolver solver = VoronoiTest();
   Voronoi &v1 = solver.addVoronoi(Vector2{0, 0}, 100);
+  auto agent2pos = Vector3{0, 0, 0};
   Agent agent = Agent(Vector3{0, 0, 0}, "Tony", &broker);
-  Agent agent2 = Agent(Vector3{0, 0, 0}, "Berto", &broker);
+  Agent agent2 = Agent(agent2pos, "Berto", &broker);
   Agent agent3 = Agent(Vector3{0, 0, 0}, "Pippo", &broker);
 
   while (!WindowShouldClose()) {
@@ -46,7 +47,17 @@ int main(void) {
       player.x += 2;
     else if (IsKeyDown(KEY_A))
       player.x -= 2;
-    else if (IsKeyDown(KEY_Q))
+    if (IsKeyDown(KEY_UP)) {
+      agent2pos.y -= 2;
+    } else if (IsKeyDown(KEY_DOWN)) {
+      agent2pos.y += 2;
+    }
+    if (IsKeyDown(KEY_RIGHT)) {
+      agent2pos.x += 2;
+    } else if (IsKeyDown(KEY_LEFT)) {
+      agent2pos.x -= 2;
+    }
+    if (IsKeyDown(KEY_Q))
       camera.zoom += 0.01;
     else if (IsKeyDown(KEY_E))
       camera.zoom -= 0.01;
@@ -58,7 +69,7 @@ int main(void) {
     camera.target.y = player.y;
     agent.SetTargetPosition(Vector3{player.x, player.y, 0});
     agent.Step(deltaTime);
-    agent2.SetTargetPosition(Vector3{-player.x, player.y, 0});
+    agent2.SetTargetPosition(agent2pos);
     agent2.Step(deltaTime);
     agent3.Step(deltaTime);
 

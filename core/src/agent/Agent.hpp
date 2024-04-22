@@ -98,8 +98,6 @@ class Agent : public ICommunicationClient {
   // Broker instance used to communicate with other actors in World
   class Broker *broker;
 
-  Voronoi *myVoronoi;
-
   class VoronoiSolver solver;
 
   // Agreement status
