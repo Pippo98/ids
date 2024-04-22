@@ -4,6 +4,11 @@
 
 #include "Clients.hpp"
 
+struct ClientPosition {
+  std::string name;
+  Vector3 position;
+};
+
 class Broker {
  public:
   /**
@@ -19,10 +24,18 @@ class Broker {
     this->clients.push_back(client);
   }
 
+  void AgreementMessage();
+
+  void SendPosition(Vector3 position, std::string name);
+
   /**
    * Util function to print the positions of all the clients
    */
   void PrintClientsPositions();
+
+  void SendMessageToClients();
+
+  void BroadcastPosition(std::string name, Vector3 position);
 
  private:
   // List of registered clients

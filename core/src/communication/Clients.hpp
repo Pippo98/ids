@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+
+#include "communication/Message.hpp"
 #include "raylib.h"
 
 /**
@@ -11,7 +14,10 @@
 class ICommunicationClient {
  public:
   virtual ~ICommunicationClient(){};
+
+  virtual std::string GetClientName() = 0;
   virtual Vector3 GetClientPosition() = 0;
-  virtual void SendPosition(Vector3) = 0;
-  virtual bool OnMessage(Vector3*) = 0;
+
+  virtual void SendPosition() = 0;
+  virtual bool OnMessage(Message) = 0;
 };

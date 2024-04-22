@@ -8,6 +8,9 @@
 #include "raymath.h"
 #include "voronoi/Voronoi.hpp"
 
+void RenderFrame();
+void DrawAgent(Agent &);
+
 int main(void) {
   printf("IDS project\n");
 
@@ -27,10 +30,12 @@ int main(void) {
   Map map((Vector2){-200, 200}, (Vector2){200, -200}, 5);
   Broker broker = Broker();
   // Init Agents
-  Agent agent = Agent(Vector3(), &broker);
 
   VoronoiSolver solver = VoronoiTest();
   Voronoi &v1 = solver.addVoronoi(Vector2{0, 0}, 100);
+  Agent agent = Agent(Vector3{0, 0, 0}, "Tony", &broker);
+  Agent agent2 = Agent(Vector3{0, 0, 0}, "Berto", &broker);
+  Agent agent3 = Agent(Vector3{0, 0, 0}, "Pippo", &broker);
 
   while (!WindowShouldClose()) {
     if (IsKeyDown(KEY_W))
@@ -41,10 +46,32 @@ int main(void) {
       player.x += 2;
     else if (IsKeyDown(KEY_A))
       player.x -= 2;
+    else if (IsKeyDown(KEY_Q))
+      camera.zoom += 0.01;
+    else if (IsKeyDown(KEY_E))
+      camera.zoom -= 0.01;
+
+    auto time = GetTime();
+
+    // Calculate delta time
+    float deltaTime = GetFrameTime();
+
+    printf("Time: %f\n", time);
 
     camera.target.x = player.x;
     camera.target.y = player.y;
-    // agent.Step();
+    agent.SetTargetPosition(Vector3{player.x, player.y, 0});
+    agent.Step(deltaTime);
+    agent2.SetTargetPosition(Vector3{-player.x, player.y, 0});
+    agent2.Step(deltaTime);
+    agent3.Step(deltaTime);
+
+    // FLOW
+    // agent get positions of all Agents
+    // agent calculate new position
+    // agent send new position to Broker
+    // Broker send new positions to all Agents
+    // agent update position
 
     BeginDrawing();
 
@@ -90,10 +117,24 @@ int main(void) {
     }
     solver.draw();
 
+    DrawLine(-screenWidth * 10, 0, screenWidth * 10, 0, GREEN);
+
+    DrawRectangle(player.x, player.y, player.width, player.height, BLUE);
+    DrawAgent(agent);
+    DrawAgent(agent2);
+
     EndMode2D();
 
     EndDrawing();
   }
 
   return 0;
+}
+
+void DrawAgent(Agent &agent) {
+  DrawEllipse(agent.GetPosition().x, agent.GetPosition().y, 10.0, 10.0, RED);
+}
+
+void RenderFrame() {
+  // printf("RenderFrame\n");
 }
