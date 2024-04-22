@@ -14,7 +14,7 @@ World::World(int n_agents) {
     position.z = rand() % 100;
     // Vector3 position = Vector3(rand() % 100, rand() % 100, rand() % 100);
 
-    Agent agent = Agent(position, &broker);
+    Agent agent = Agent(position, "Pippo", &broker);
   }
   // Test comment
 }

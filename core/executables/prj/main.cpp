@@ -4,6 +4,9 @@
 #include "communication/Broker.hpp"
 #include "raylib.h"
 
+void RenderFrame();
+void DrawAgent(Agent &);
+
 int main(void) {
   printf("IDS project\n");
 
@@ -12,17 +15,19 @@ int main(void) {
 
   InitWindow(screenWidth, screenHeight, "IDS");
 
-  Rectangle player = {400, 280, 40, 40};
+  Rectangle player = {0, 0, 0, 0};
   SetTargetFPS(60);
   Camera2D camera;
-  camera.target = (Vector2){player.x + 20.0f, player.y + 20.0f};
+  camera.target = (Vector2){player.x, player.y};
   camera.offset = (Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
   camera.rotation = 0.0f;
   camera.zoom = 1.0f;
 
   Broker broker = Broker();
   // Init Agents
-  // Agent agent  = Agent(&broker);
+  Agent agent = Agent(Vector3{0, 0, 0}, "Tony", &broker);
+  Agent agent2 = Agent(Vector3{0, 0, 0}, "Berto", &broker);
+  Agent agent3 = Agent(Vector3{0, 0, 0}, "Pippo", &broker);
 
   while (!WindowShouldClose()) {
     if (IsKeyDown(KEY_W))
@@ -33,29 +38,42 @@ int main(void) {
       player.x += 2;
     else if (IsKeyDown(KEY_A))
       player.x -= 2;
+    else if (IsKeyDown(KEY_Q))
+      camera.zoom += 0.01;
+    else if (IsKeyDown(KEY_E))
+      camera.zoom -= 0.01;
+
+    auto time = GetTime();
+
+    // Calculate delta time
+    float deltaTime = GetFrameTime();
+
+    printf("Time: %f\n", time);
 
     camera.target.x = player.x;
     camera.target.y = player.y;
-    // agent.Step();
+    agent.SetTargetPosition(Vector3{player.x, player.y, 0});
+    agent.Step(deltaTime);
+    agent2.SetTargetPosition(Vector3{-player.x, player.y, 0});
+    agent2.Step(deltaTime);
+    agent3.Step(deltaTime);
+
+    // FLOW
+    // agent get positions of all Agents
+    // agent calculate new position
+    // agent send new position to Broker
+    // Broker send new positions to all Agents
+    // agent update position
 
     BeginDrawing();
 
     ClearBackground(RAYWHITE);
     BeginMode2D(camera);
-    DrawLine(-screenWidth * 10, (int)camera.target.y, screenWidth * 10,
-             (int)camera.target.y, GREEN);
+    DrawLine(-screenWidth * 10, 0, screenWidth * 10, 0, GREEN);
 
-    // DrawEllipse(agent.GetPosition().x, agent.GetPosition().y, 10.0, 10.0,
-    // RED);
-    DrawEllipse(screenWidth / 2.0, screenHeight / 2.0, 10.0, 10.0, GREEN);
-    DrawEllipse(0, 0, 10.0, 10.0, GREEN);
-
-    // for (float i = 0; i < 1; i += 0.1) {
-    //   for (float j = 0; j < 10; j += 0.1) {
-    //     DrawEllipse(i * screenWidth + 5.0, j * screenHeight
-    //     + 5.0, 10.0, 10.0, DARKGREEN);
-    //   }
-    // }
+    DrawRectangle(player.x, player.y, player.width, player.height, BLUE);
+    DrawAgent(agent);
+    DrawAgent(agent2);
 
     EndMode2D();
 
@@ -63,4 +81,12 @@ int main(void) {
   }
 
   return 0;
+}
+
+void DrawAgent(Agent &agent) {
+  DrawEllipse(agent.GetPosition().x, agent.GetPosition().y, 10.0, 10.0, RED);
+}
+
+void RenderFrame() {
+  // printf("RenderFrame\n");
 }
