@@ -51,12 +51,8 @@ int main(void) {
     else if (IsKeyDown(KEY_E))
       camera.zoom -= 0.01;
 
-    auto time = GetTime();
-
     // Calculate delta time
     float deltaTime = GetFrameTime();
-
-    printf("Time: %f\n", time);
 
     camera.target.x = player.x;
     camera.target.y = player.y;
@@ -77,20 +73,7 @@ int main(void) {
 
     ClearBackground(RAYWHITE);
     BeginMode2D(camera);
-    // DrawLine(-screenWidth * 10, (int)camera.target.y, screenWidth * 10,
-    //          (int)camera.target.y, GREEN);
 
-    // DrawEllipse(agent.GetPosition().x, agent.GetPosition().y, 10.0, 10.0,
-    // RED);
-    // DrawEllipse(screenWidth / 2.0, screenHeight / 2.0, 10.0, 10.0, GREEN);
-    // DrawEllipse(0, 0, 10.0, 10.0, GREEN);
-
-    // for (float i = 0; i < 1; i += 0.1) {
-    //   for (float j = 0; j < 10; j += 0.1) {
-    //     DrawEllipse(i * screenWidth + 5.0, j * screenHeight
-    //     + 5.0, 10.0, 10.0, DARKGREEN);
-    //   }
-    // }
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
       Vector2 mouse = Vector2Subtract(GetMousePosition(), camera.offset);
       map.setConfidence(mouse, map.getConfidence(mouse) + 10);
@@ -110,16 +93,17 @@ int main(void) {
     DrawRectangleLines(tl.x, br.y, dimension.x, dimension.y, BLACK);
 
     v1.setPosition(Vector2Subtract(GetMousePosition(), camera.offset));
-    solver.solve();
+    // solver.solve();
 
-    for (const auto &cell : solver.getCells()) {
-      cell.calculateCenterOfMass(map);
-    }
-    solver.draw();
+    // for (const auto &cell : solver.getCells()) {
+    //   cell.calculateCenterOfMass(map);
+    // }
+    // solver.draw();
 
     DrawLine(-screenWidth * 10, 0, screenWidth * 10, 0, GREEN);
 
     DrawRectangle(player.x, player.y, player.width, player.height, BLUE);
+
     DrawAgent(agent);
     DrawAgent(agent2);
 
@@ -133,6 +117,7 @@ int main(void) {
 
 void DrawAgent(Agent &agent) {
   DrawEllipse(agent.GetPosition().x, agent.GetPosition().y, 10.0, 10.0, RED);
+  agent.DrawVoronoi();
 }
 
 void RenderFrame() {

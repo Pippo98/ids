@@ -3,6 +3,7 @@
 #include <map>
 
 #include "communication/Clients.hpp"
+#include "voronoi/Voronoi.hpp"
 
 /**
  * Agent class
@@ -52,10 +53,18 @@ class Agent : public ICommunicationClient {
   bool OnMessage(Message) override;
 
   /***********************
+   * Voronoi Methods     *
+   ***********************/
+
+  void DrawVoronoi() { this->solver.draw(); };
+
+  /***********************
    * Getters and Setters *
    ***********************/
 
   Vector3 GetPosition() { return this->position; };
+
+  double GetWatchRadius() { return this->watchRadius; };
 
   // Interface GetPosition implementation
   Vector3 GetClientPosition() override { return GetPosition(); };
@@ -63,8 +72,6 @@ class Agent : public ICommunicationClient {
   std::string GetClientName() override { return this->name; };
 
   void SetTargetPosition(Vector3 target) { this->targetPosition = target; };
-
-  void TargetPositionAgreement();
 
  private:
   /**
@@ -76,6 +83,7 @@ class Agent : public ICommunicationClient {
  private:
   // Current exact position of Agent
   Vector3 position;
+  double watchRadius = 100;
 
   // Current moving velocity of Agent
   // Vector3 velocity = {0.1, 0.1, 0.1};
@@ -90,9 +98,14 @@ class Agent : public ICommunicationClient {
   // Broker instance used to communicate with other actors in World
   class Broker *broker;
 
+  Voronoi *myVoronoi;
+
+  class VoronoiSolver solver;
+
   // Agreement status
   bool agreement = false;
   std::map<std::string, Vector3> agentsPositions;
+  std::map<std::string, Voronoi *> agentsVoronoi;
 
  public:
   /**
