@@ -3,7 +3,15 @@
 #include <map>
 
 #include "communication/Clients.hpp"
+#include "communication/Message.hpp"
 #include "voronoi/Voronoi.hpp"
+
+struct AgentsPositions {
+  std::string name;
+  Vector3 position;
+  Voronoi *voronoi;
+  bool isTarget;
+};
 
 /**
  * Agent class
@@ -22,7 +30,7 @@ class Agent : public ICommunicationClient {
    * @param Broker: Broker instance to communicate with other actors
    */
 
-  Agent(Vector3, std::string, class Broker *);
+  Agent(Vector3, const class Map &, std::string, class Broker *);
 
   /**
    * Internal step function
@@ -42,7 +50,7 @@ class Agent : public ICommunicationClient {
    *
    * @param Vector2 position: The current position of the agent
    */
-  void SendPosition() override;
+  void BroadcastPosition();
 
   /**
    * Receives the position of all other agents from the broker
@@ -50,11 +58,13 @@ class Agent : public ICommunicationClient {
    *
    * @param Vector3 Pointer: List of positions of all the agents in the world
    */
-  bool OnMessage(Message) override;
+  bool OnMessage(Message &) override;
 
   /***********************
    * Voronoi Methods     *
    ***********************/
+
+  void SolveVoronoi();
 
   void DrawVoronoi() { this->solver.draw(); };
 
@@ -83,14 +93,17 @@ class Agent : public ICommunicationClient {
  private:
   // Current exact position of Agent
   Vector3 position;
+  const Map &posMap;
   double watchRadius = 100;
+
+  bool isAgreeing = false;
 
   // Current moving velocity of Agent
   // Vector3 velocity = {0.1, 0.1, 0.1};
 
   // Target position for the agent to move to
   Vector3 targetPosition;
-  bool shouldMove = true;
+  bool isOnTarget = false;
   double lastUpdateTime = 0;
 
   std::string name;
@@ -102,7 +115,7 @@ class Agent : public ICommunicationClient {
 
   // Agreement status
   bool agreement = false;
-  std::map<std::string, Vector3> agentsPositions;
+  std::map<std::string, AgentPosition> agentsPositions;
   std::map<std::string, Voronoi *> agentsVoronoi;
 
  public:

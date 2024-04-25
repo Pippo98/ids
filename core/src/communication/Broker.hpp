@@ -24,18 +24,7 @@ class Broker {
     this->clients.push_back(client);
   }
 
-  void AgreementMessage();
-
-  void SendPosition(Vector3 position, std::string name);
-
-  /**
-   * Util function to print the positions of all the clients
-   */
-  void PrintClientsPositions();
-
-  void SendMessageToClients();
-
-  void BroadcastPosition(std::string name, Vector3 position);
+  void BroadcastMessage(ICommunicationClient *, Message &message);
 
  private:
   // List of registered clients

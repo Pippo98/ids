@@ -21,6 +21,7 @@ target_sources(
   communication
   PRIVATE
   ${CDIR}/src/communication/Broker.cpp
+  ${CDIR}/src/communication/Message.cpp
   )
 target_link_libraries(communication raylib agent)
 

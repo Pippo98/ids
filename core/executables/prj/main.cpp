@@ -10,6 +10,7 @@
 
 void RenderFrame();
 void DrawAgent(Agent &);
+void HandleKeyboardInput(Rectangle &, Vector3 &, Camera2D &);
 
 int main(void) {
   printf("IDS project\n");
@@ -34,34 +35,12 @@ int main(void) {
   VoronoiSolver solver = VoronoiTest();
   Voronoi &v1 = solver.addVoronoi(Vector2{0, 0}, 100);
   auto agent2pos = Vector3{0, 0, 0};
-  Agent agent = Agent(Vector3{0, 0, 0}, "Tony", &broker);
-  Agent agent2 = Agent(agent2pos, "Berto", &broker);
-  Agent agent3 = Agent(Vector3{0, 0, 0}, "Pippo", &broker);
+  Agent agent = Agent(Vector3{10, 0, 0}, map, "Tony", &broker);
+  Agent agent2 = Agent(agent2pos, map, "Berto", &broker);
+  Agent agent3 = Agent(Vector3{10, 0, 0}, map, "Pippo", &broker);
 
   while (!WindowShouldClose()) {
-    if (IsKeyDown(KEY_W))
-      player.y -= 2;
-    else if (IsKeyDown(KEY_S))
-      player.y += 2;
-    if (IsKeyDown(KEY_D))
-      player.x += 2;
-    else if (IsKeyDown(KEY_A))
-      player.x -= 2;
-    if (IsKeyDown(KEY_UP)) {
-      agent2pos.y -= 2;
-    } else if (IsKeyDown(KEY_DOWN)) {
-      agent2pos.y += 2;
-    }
-    if (IsKeyDown(KEY_RIGHT)) {
-      agent2pos.x += 2;
-    } else if (IsKeyDown(KEY_LEFT)) {
-      agent2pos.x -= 2;
-    }
-    if (IsKeyDown(KEY_Q))
-      camera.zoom += 0.01;
-    else if (IsKeyDown(KEY_E))
-      camera.zoom -= 0.01;
-
+    HandleKeyboardInput(player, agent2pos, camera);
     // Calculate delta time
     float deltaTime = GetFrameTime();
 
@@ -129,6 +108,32 @@ int main(void) {
 void DrawAgent(Agent &agent) {
   DrawEllipse(agent.GetPosition().x, agent.GetPosition().y, 10.0, 10.0, RED);
   agent.DrawVoronoi();
+}
+
+void HandleKeyboardInput(Rectangle &player, Vector3 &agent2pos,
+                         Camera2D &camera) {
+  if (IsKeyDown(KEY_W))
+    player.y -= 2;
+  else if (IsKeyDown(KEY_S))
+    player.y += 2;
+  if (IsKeyDown(KEY_D))
+    player.x += 2;
+  else if (IsKeyDown(KEY_A))
+    player.x -= 2;
+  if (IsKeyDown(KEY_UP)) {
+    agent2pos.y -= 2;
+  } else if (IsKeyDown(KEY_DOWN)) {
+    agent2pos.y += 2;
+  }
+  if (IsKeyDown(KEY_RIGHT)) {
+    agent2pos.x += 2;
+  } else if (IsKeyDown(KEY_LEFT)) {
+    agent2pos.x -= 2;
+  }
+  if (IsKeyDown(KEY_Q))
+    camera.zoom += 0.01;
+  else if (IsKeyDown(KEY_E))
+    camera.zoom -= 0.01;
 }
 
 void RenderFrame() {

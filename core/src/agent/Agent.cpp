@@ -1,53 +1,70 @@
 #include "Agent.hpp"
 
 #include "communication/Broker.hpp"
+#include "communication/Message.hpp"
+#include "map/Map.hpp"
 #include "raymath.h"
 #include "voronoi/Voronoi.hpp"
 
 using namespace std;
 
-Agent::Agent(Vector3 position, std::string name, Broker *broker) {
-  // Init position to center of camera
-  this->position = position;
-  this->name = name;
-  this->broker = broker;
-
+Agent::Agent(Vector3 position, const Map &posMap, std::string name,
+             Broker *broker)
+    : position(position), posMap(posMap), name(name), broker(broker) {
   this->broker->RegisterClient(this);
   this->solver = VoronoiSolver();
-  this->agentsVoronoi = map<string, Voronoi *>();
+  this->agentsVoronoi = ::map<string, Voronoi *>();
 }
 
 Agent::~Agent() {}
 
 void Agent::Step(float deltaTime) {
-  // If the agent is moving does not compute the target position
-  if (Vector3Distance(this->position, this->targetPosition) <= 10) {
-    this->shouldMove = false;
+  if ((Vector3Distance(this->position, this->targetPosition) <= 10)) {
+    this->isOnTarget = true;
   } else {
-    this->shouldMove = true;
+    this->isOnTarget = false;
   }
 
-  if (this->shouldMove) {
+  if (isOnTarget) {
+    bool allOnTarget = false;
+    for (const auto &[name, pos] : agentsPositions) {
+      allOnTarget = allOnTarget && pos.isTarget;
+    }
+
+    if (allOnTarget) {
+      isAgreeing = true;
+
+      Message message;
+      message.type = Message::AGREEMENT;
+      message.data.startAgreementProcess = true;
+      this->broker->BroadcastMessage(this, message);
+    }
+  } else {
     Move(deltaTime);
-    // Update position once a second
   }
 
+  SolveVoronoi();
+
+  if (isAgreeing) {
+    // Calculate next target pos with Voronoi
+    Vector3 nextPos = {0, 0, 0};
+    // Comunicate possible next target pos to other agents
+  }
+
+  BroadcastPosition();
+
+  // this->SetTargetPosition(
+  //     {v.getLastCenterOfMass().x, v.getLastCenterOfMass().y, 0});
+}
+
+void Agent::BroadcastPosition() {
+  // TODO: Randomize intervals
   auto time = GetTime();
   if (time - this->lastUpdateTime > 1) {
     this->lastUpdateTime = time;
-    this->SendPosition();
+    Message message = CreatePositionMessage(this->position, this->isOnTarget);
+    this->broker->BroadcastMessage(this, message);
   }
-
-  solver = VoronoiSolver();
-  solver.addVoronoi({position.x, position.y}, 100);
-  for (const auto &[name, pos] : agentsPositions) {
-    solver.addVoronoi({pos.x, pos.y}, 100);
-  }
-  this->solver.solve();
-}
-
-void Agent::SendPosition() {
-  this->broker->BroadcastPosition(this->name, this->position);
 }
 
 void Agent::Move(float deltaTime) {
@@ -55,12 +72,26 @@ void Agent::Move(float deltaTime) {
       Vector3MoveTowards(this->position, this->targetPosition, 100 * deltaTime);
 }
 
-bool Agent::OnMessage(Message message) {
-  printf("Agent %s received message from %s\n", this->name.c_str(),
-         message.name.c_str());
+bool Agent::OnMessage(Message &message) {
+  switch (message.type) {
+    case Message::POSITION:
+      this->agentsPositions.insert_or_assign(message.sender,
+                                             message.data.agentPosition);
+      return true;
+    case Message::AGREEMENT:
+      this->isAgreeing = message.data.startAgreementProcess;
+      return true;
+    default:
+      return false;
+  }
+}
 
-  // Update LOCAL positions
-  this->agentsPositions.insert_or_assign(message.name, message.position);
+void Agent::SolveVoronoi() {
+  solver = VoronoiSolver();
+  solver.addVoronoi({position.x, position.y}, 100);
 
-  return true;
+  for (const auto &[name, pos] : agentsPositions) {
+    solver.addVoronoi({pos.position.x, pos.position.y}, 100);
+  }
+  this->solver.solve();
 }
