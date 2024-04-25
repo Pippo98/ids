@@ -20,6 +20,7 @@ class Voronoi {
 
   bool pointInVoronoi(const Vector2 &position) const;
   bool hasIntersection() const { return !bounds.empty(); }
+  void calculateCenterOfMass() const;
   void calculateCenterOfMass(const Map &map) const;
   Vector2 getLastCenterOfMass() const { return centerOfMass; }
 

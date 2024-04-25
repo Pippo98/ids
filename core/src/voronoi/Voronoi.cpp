@@ -39,34 +39,52 @@ bool Voronoi::pointInVoronoi(const Vector2 &position) const {
 float Voronoi::getDensity(const Map &map, const Vector2 &position) const {
   return 1.0 + map.getConfidence(position);
 }
-void Voronoi::calculateCenterOfMass(const Map &map) const {
-  const size_t radiusSamples = 10;
-  const float sampleRadiusIncrement = 1.0f / radiusSamples;
+void Voronoi::calculateCenterOfMass() const {
   double mass = 0.0;
   centerOfMass = (Vector2){0.0f, 0.0f};
-  for (size_t radiusIndex = 0; radiusIndex <= radiusSamples; ++radiusIndex) {
-    float rNorm = sampleRadiusIncrement * radiusIndex;
-    float radius = rNorm * maxRadius;
-    float sampleAngleIncrement = 8.0 / radius;
+  const size_t numberOfPoints = 300;
+  const float turnFactor = 0.061;
+  for (size_t i = 0; i < numberOfPoints; ++i) {
+    float radius = maxRadius * std::sqrt(i / (numberOfPoints - 1.0));
+    float angle = 2 * PI * turnFactor * i;
 
-    for (float alpha = 0.0f; alpha < 2 * PI; alpha += sampleAngleIncrement) {
-      Vector2 sample{pos.x + radius * std::cos(alpha),
-                     pos.y + radius * std::sin(alpha)};
-      if (map.getTileType(sample) == TileType::OBSTACLE) {
-        continue;
-      }
-      if (!pointInVoronoi(sample)) {
-        continue;
-      }
-      DrawCircle(sample.x, sample.y, 1.0, BLACK);
-      float density = getDensity(map, sample);
-      mass += density;
-      centerOfMass.x += density * sample.x;
-      centerOfMass.y += density * sample.y;
-      if (radiusIndex == 0) {
-        break;
-      }
+    Vector2 sample{pos.x + radius * std::cos(angle),
+                   pos.y + radius * std::sin(angle)};
+    if (!pointInVoronoi(sample)) {
+      continue;
     }
+    DrawCircle(sample.x, sample.y, 1.0, BLACK);
+    mass += 1.0;
+    centerOfMass.x += sample.x;
+    centerOfMass.y += sample.y;
+  }
+  if (!FloatEquals(mass, 0.0f)) {
+    centerOfMass.x /= mass;
+    centerOfMass.y /= mass;
+  }
+}
+void Voronoi::calculateCenterOfMass(const Map &map) const {
+  double mass = 0.0;
+  centerOfMass = (Vector2){0.0f, 0.0f};
+  const size_t numberOfPoints = 300;
+  const float turnFactor = 0.061;
+  for (size_t i = 0; i < numberOfPoints; ++i) {
+    float radius = maxRadius * std::sqrt(i / (numberOfPoints - 1.0));
+    float angle = 2 * PI * turnFactor * i;
+
+    Vector2 sample{pos.x + radius * std::cos(angle),
+                   pos.y + radius * std::sin(angle)};
+    if (map.getTileType(sample) == TileType::OBSTACLE) {
+      continue;
+    }
+    if (!pointInVoronoi(sample)) {
+      continue;
+    }
+    DrawCircle(sample.x, sample.y, 1.0, BLACK);
+    float density = getDensity(map, sample);
+    mass += density;
+    centerOfMass.x += density * sample.x;
+    centerOfMass.y += density * sample.y;
   }
 
   if (!FloatEquals(mass, 0.0f)) {
@@ -135,7 +153,6 @@ void VoronoiSolver::findIntersections() {
 
 void VoronoiSolver::removeBoundsIntersections() {
   for (size_t i = 0; i < cells.size(); ++i) {
-    printf("Cell ptr: %p\n", &cells[i]);
     auto &bounds = cells[i].bounds;
     for (size_t j = 0; j < bounds.size(); ++j) {
       for (size_t k = 0; k < bounds.size(); ++k) {
