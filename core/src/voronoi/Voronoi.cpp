@@ -93,11 +93,12 @@ void Voronoi::calculateCenterOfMass(const Map &map) const {
   }
 }
 
-Voronoi &VoronoiSolver::addVoronoi(const Voronoi &voronoi) {
-  cells.push_back(voronoi);
-  return cells.back();
+size_t VoronoiSolver::addVoronoi(const Voronoi &voronoi) {
+  idCounter++;
+  cells[idCounter] = voronoi;
+  return idCounter;
 }
-Voronoi &VoronoiSolver::addVoronoi(Vector2 position, double maxRadius) {
+size_t VoronoiSolver::addVoronoi(Vector2 position, double maxRadius) {
   return addVoronoi(Voronoi(position, maxRadius));
 }
 
@@ -113,12 +114,16 @@ void VoronoiSolver::findIntersections() {
   cache_t *cache = new cache_t[cells.size() * cells.size()];
   cacheClear(cache, cells.size());
 
-  for (auto &cell : cells) {
+  for (auto &[_, cell] : cells) {
     cell.bounds.clear();
   }
 
-  for (size_t i = 0; i < cells.size(); ++i) {
-    for (size_t j = 0; j < cells.size(); ++j) {
+  size_t i = -1, j;
+  for (auto &[_, cellI] : cells) {
+    i++;
+    j = -1;
+    for (auto &[_, cellJ] : cells) {
+      j++;
       if (i == j) {
         continue;
       }
@@ -129,8 +134,8 @@ void VoronoiSolver::findIntersections() {
         cacheEl.visisted = 1;
         cacheAt(cache, cells.size(), j, i).visisted = 1;
       }
-      auto &v1 = cells[i];
-      auto &v2 = cells[j];
+      auto &v1 = cellI;
+      auto &v2 = cellJ;
 
       int intersectionNumber =
           CirclesIntersects(v1.pos, v1.maxRadius, v2.pos, v2.maxRadius);
@@ -141,10 +146,10 @@ void VoronoiSolver::findIntersections() {
       const auto &intersections =
           CirclesIntersections(v1.pos, v1.maxRadius, v2.pos, v2.maxRadius);
       auto newBound1 =
-          Voronoi::intersection_t{{intersections[0], intersections[1]}, v2};
+          Voronoi::intersection_t{{intersections[0], intersections[1]}, &v2};
       v1.bounds.push_back(newBound1);
       auto newBound2 =
-          Voronoi::intersection_t{{intersections[1], intersections[0]}, v1};
+          Voronoi::intersection_t{{intersections[1], intersections[0]}, &v1};
       v2.bounds.push_back(newBound2);
     }
   }
@@ -152,8 +157,8 @@ void VoronoiSolver::findIntersections() {
 }
 
 void VoronoiSolver::removeBoundsIntersections() {
-  for (size_t i = 0; i < cells.size(); ++i) {
-    auto &bounds = cells[i].bounds;
+  for (auto &[id, cell] : cells) {
+    auto &bounds = cell.bounds;
     for (size_t j = 0; j < bounds.size(); ++j) {
       for (size_t k = 0; k < bounds.size(); ++k) {
         if (j == k) {
@@ -170,14 +175,14 @@ void VoronoiSolver::removeBoundsIntersections() {
 
         auto &v1 = b1.with;
         auto &v2 = b2.with;
-        if (Vector2Distance(b1.segment.p1, v2.pos) <
-            Vector2Distance(b1.segment.p2, v2.pos)) {
+        if (Vector2Distance(b1.segment.p1, v2->pos) <
+            Vector2Distance(b1.segment.p2, v2->pos)) {
           b1.segment.p1 = point;
         } else {
           b1.segment.p2 = point;
         }
-        if (Vector2Distance(b2.segment.p1, v1.pos) <
-            Vector2Distance(b2.segment.p2, v1.pos)) {
+        if (Vector2Distance(b2.segment.p1, v1->pos) <
+            Vector2Distance(b2.segment.p2, v1->pos)) {
           b2.segment.p1 = point;
         } else {
           b2.segment.p2 = point;
@@ -194,16 +199,16 @@ bool VoronoiSolver::solve() {
 }
 
 void VoronoiSolver::draw() const {
-  for (size_t i = 0; i < cells.size(); ++i) {
-    DrawCircleLines(cells[i].pos.x, cells[i].pos.y, cells[i].maxRadius, RED);
-    DrawCircle(cells[i].pos.x, cells[i].pos.y, 2.0, RED);
+  for (const auto &[id, cell] : cells) {
+    DrawCircleLines(cell.pos.x, cell.pos.y, cell.maxRadius, RED);
+    DrawCircle(cell.pos.x, cell.pos.y, 2.0, RED);
 
-    for (const auto &bound : cells[i].bounds) {
+    for (const auto &bound : cell.bounds) {
       DrawLine(bound.segment.p1.x, bound.segment.p1.y, bound.segment.p2.x,
                bound.segment.p2.y, BLUE);
     }
 
-    Vector2 CenterOfMass = cells[i].getLastCenterOfMass();
+    Vector2 CenterOfMass = cell.getLastCenterOfMass();
     DrawCircle(CenterOfMass.x, CenterOfMass.y, 3.0, DARKPURPLE);
   }
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <map>
 
 #include "geometry/Geometry.hpp"
 #include "map/Map.hpp"
@@ -27,7 +27,7 @@ class Voronoi {
   friend class VoronoiSolver;
   struct intersection_t {
     segment_t segment;
-    Voronoi &with;
+    Voronoi *with;
   };
 
  private:
@@ -42,19 +42,22 @@ class Voronoi {
 
 class VoronoiSolver {
  public:
-  Voronoi &addVoronoi(const Voronoi &voronoi);
-  Voronoi &addVoronoi(Vector2 position, double maxRadius);
-  const std::vector<Voronoi> &getCells() const { return cells; };
+  size_t addVoronoi(const Voronoi &voronoi);
+  size_t addVoronoi(Vector2 position, double maxRadius);
+  const std::map<size_t, Voronoi> &getCells() const { return cells; };
 
   bool solve();
   void draw() const;
+
+  Voronoi &getVoronoi(size_t id) { return cells[id]; }
 
  private:
   void findIntersections();
   void removeBoundsIntersections();
 
  private:
-  std::vector<Voronoi> cells;
+  size_t idCounter;
+  std::map<size_t, Voronoi> cells;
 };
 
 VoronoiSolver VoronoiTest();
