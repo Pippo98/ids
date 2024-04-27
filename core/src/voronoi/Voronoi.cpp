@@ -42,8 +42,8 @@ float Voronoi::getDensity(const Map &map, const Vector2 &position) const {
 void Voronoi::calculateCenterOfMass() const {
   double mass = 0.0;
   centerOfMass = (Vector2){0.0f, 0.0f};
-  const size_t numberOfPoints = 300;
-  const float turnFactor = 0.061;
+  const size_t numberOfPoints = PI * maxRadius * maxRadius / 100.0;
+  const float turnFactor = 0.61;
   for (size_t i = 0; i < numberOfPoints; ++i) {
     float radius = maxRadius * std::sqrt(i / (numberOfPoints - 1.0));
     float angle = 2 * PI * turnFactor * i;
@@ -66,8 +66,8 @@ void Voronoi::calculateCenterOfMass() const {
 void Voronoi::calculateCenterOfMass(const Map &map) const {
   double mass = 0.0;
   centerOfMass = (Vector2){0.0f, 0.0f};
-  const size_t numberOfPoints = 300;
-  const float turnFactor = 0.061;
+  const size_t numberOfPoints = PI * maxRadius * maxRadius / 100.0;
+  const float turnFactor = 0.61;
   for (size_t i = 0; i < numberOfPoints; ++i) {
     float radius = maxRadius * std::sqrt(i / (numberOfPoints - 1.0));
     float angle = 2 * PI * turnFactor * i;

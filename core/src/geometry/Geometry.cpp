@@ -24,17 +24,16 @@ Vector2 SegmentIntersection(const segment_t &s1, const segment_t &s2) {
   };
 
   Vector2 point;
-  // b1 horizontal
-  if (FloatEquals(s1.p1.y, s1.p2.y)) {
+  if (FloatEquals(s1.p1.y, s1.p2.y)) {  // segment 1 horizontal
     double t = (s1.p1.y - s2.p1.y) / (s2.p2.y - s2.p1.y);
     point = Vector2Lerp(s2.p1, s2.p2, t);
-  } else if (FloatEquals(s2.p1.y, s2.p2.y)) {
+  } else if (FloatEquals(s2.p1.y, s2.p2.y)) {  // segment 2 horizontal
     double t = (s2.p1.y - s1.p1.y) / (s1.p2.y - s1.p1.y);
     point = Vector2Lerp(s1.p1, s1.p2, t);
-  } else if (FloatEquals(s1.p1.x, s1.p2.x)) {
+  } else if (FloatEquals(s1.p1.x, s1.p2.x)) {  // segment 1 vertical
     double t = (s1.p1.x - s2.p1.x) / (s2.p2.x - s2.p1.x);
     point = Vector2Lerp(s2.p2, s2.p2, t);
-  } else if (FloatEquals(s2.p1.x, s2.p2.x)) {
+  } else if (FloatEquals(s2.p1.x, s2.p2.x)) {  // segment 2 vertical
     double t = (s2.p1.x - s1.p1.x) / (s1.p2.x - s1.p1.x);
     point = Vector2Lerp(s1.p1, s1.p2, t);
   } else {
