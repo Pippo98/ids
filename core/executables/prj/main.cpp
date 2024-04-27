@@ -33,7 +33,7 @@ int main(void) {
   // Init Agents
 
   VoronoiSolver solver = VoronoiTest();
-  Voronoi &v1 = solver.addVoronoi(Vector2{0, 0}, 100);
+  size_t ID_v1 = solver.addVoronoi(Vector2{0, 0}, 100);
   auto agent2pos = Vector3{0, 0, 0};
   Agent agent = Agent(Vector3{10, 0, 0}, map, "Tony", &broker);
   Agent agent2 = Agent(agent2pos, map, "Berto", &broker);
@@ -47,8 +47,8 @@ int main(void) {
     camera.target.x = player.x;
     camera.target.y = player.y;
     agent.SetTargetPosition(Vector3{player.x, player.y, 0});
-    agent.Step(deltaTime);
     agent2.SetTargetPosition(agent2pos);
+    agent.Step(deltaTime);
     agent2.Step(deltaTime);
     agent3.Step(deltaTime);
 
@@ -63,10 +63,13 @@ int main(void) {
 
     ClearBackground(RAYWHITE);
     BeginMode2D(camera);
+    Vector2 mousePosition = Vector2Add(
+        Vector2Divide(Vector2Subtract(GetMousePosition(), camera.offset),
+                      (Vector2){camera.zoom, camera.zoom}),
+        camera.target);
 
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-      Vector2 mouse = Vector2Subtract(GetMousePosition(), camera.offset);
-      map.setConfidence(mouse, map.getConfidence(mouse) + 10);
+      map.setConfidence(mousePosition, map.getConfidence(mousePosition) + 10);
     }
     float res = map.getResolution();
     Vector2 tl = map.getTopLeftCorner();
@@ -82,13 +85,13 @@ int main(void) {
     Vector2 dimension{br.x - tl.x, tl.y - br.y};
     DrawRectangleLines(tl.x, br.y, dimension.x, dimension.y, BLACK);
 
-    v1.setPosition(Vector2Subtract(GetMousePosition(), camera.offset));
-    // solver.solve();
+    solver.getVoronoi(ID_v1).setPosition(mousePosition);
+    solver.solve();
 
-    // for (const auto &cell : solver.getCells()) {
-    //   cell.calculateCenterOfMass(map);
-    // }
-    // solver.draw();
+    for (const auto &[_, cell] : solver.getCells()) {
+      cell.calculateCenterOfMass(map);
+    }
+    solver.draw();
 
     DrawLine(-screenWidth * 10, 0, screenWidth * 10, 0, GREEN);
 
