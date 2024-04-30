@@ -95,6 +95,7 @@ class Agent : public ICommunicationClient {
   Vector3 position;
   const Map &posMap;
   double watchRadius = 100;
+  size_t myVoronoiID;
 
   bool isAgreeing = false;
 
@@ -116,7 +117,7 @@ class Agent : public ICommunicationClient {
   // Agreement status
   bool agreement = false;
   std::map<std::string, AgentPosition> agentsPositions;
-  std::map<std::string, Voronoi *> agentsVoronoi;
+  std::map<std::string, size_t> agentsVoronoiLookup;
 
  public:
   /**

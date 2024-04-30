@@ -13,7 +13,9 @@ Agent::Agent(Vector3 position, const Map &posMap, std::string name,
     : position(position), posMap(posMap), name(name), broker(broker) {
   this->broker->RegisterClient(this);
   this->solver = VoronoiSolver();
-  this->agentsVoronoi = ::map<string, Voronoi *>();
+  this->myVoronoiID =
+      solver.addVoronoi((Vector2){position.x, position.y}, watchRadius);
+  this->agentsVoronoiLookup = ::map<string, size_t>();
 }
 
 Agent::~Agent() {}
@@ -74,10 +76,18 @@ void Agent::Move(float deltaTime) {
 
 bool Agent::OnMessage(Message &message) {
   switch (message.type) {
-    case Message::POSITION:
-      this->agentsPositions.insert_or_assign(message.sender,
-                                             message.data.agentPosition);
+    case Message::POSITION: {
+      const auto [_, inserted] = this->agentsPositions.insert_or_assign(
+          message.sender, message.data.agentPosition);
+      if (inserted) {
+        size_t newVoronoiID =
+            solver.addVoronoi((Vector2){message.data.agentPosition.position.x,
+                                        message.data.agentPosition.position.y},
+                              watchRadius);
+        agentsVoronoiLookup[message.sender] = newVoronoiID;
+      }
       return true;
+    }
     case Message::AGREEMENT:
       this->isAgreeing = message.data.startAgreementProcess;
       return true;
@@ -87,11 +97,14 @@ bool Agent::OnMessage(Message &message) {
 }
 
 void Agent::SolveVoronoi() {
-  solver = VoronoiSolver();
-  solver.addVoronoi({position.x, position.y}, 100);
+  solver.getVoronoi(myVoronoiID).setPosition((Vector2){position.x, position.y});
 
-  for (const auto &[name, pos] : agentsPositions) {
-    solver.addVoronoi({pos.position.x, pos.position.y}, 100);
+  for (const auto &[name, id] : agentsVoronoiLookup) {
+    solver.getVoronoi(id).setPosition((Vector2){
+        agentsPositions[name].position.x, agentsPositions[name].position.y});
   }
   this->solver.solve();
+  for (const auto &[id, cell] : solver.getCells()) {
+    cell.calculateCenterOfMass(posMap);
+  }
 }
