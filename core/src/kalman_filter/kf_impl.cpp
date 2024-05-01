@@ -24,7 +24,9 @@ Eigen::MatrixXd KalmanFilterBase::getCovariance() { return P; }
 
 void KalmanFilterBase::print() { printToStream(std::cout); }
 void KalmanFilterBase::printToStream(std::ostream &stream) {
+  stream << "-- STATE --\n";
   stream << X << "\n";
+  stream << "-- COVARIANCE --\n";
   stream << P << std::endl;
 }
 
@@ -47,11 +49,17 @@ void KalmanFilter::predict(const Eigen::VectorXd &input) {
   if (B.size() != 0 && input.size() != 0) {
     X += B * input;
   }
-  P = A * P * P.transpose() + Q;
+  P = A * P * A.transpose();
+  if (Q.size() != 0) {
+    P += Q;
+  }
 }
 void KalmanFilter::update(const Eigen::VectorXd &measurements) {
-  auto S = H * P * H.transpose() + R;
-  auto K = P * H * S.inverse();
+  Eigen::MatrixXd S = H * P * H.transpose();
+  if (R.size() != 0) {
+    S += R;
+  }
+  auto K = P * H.transpose() * S.inverse();
   X = X + K * (measurements - H * X);
   Eigen::MatrixXd I(X.size(), X.size());
   I.setIdentity();
