@@ -11,3 +11,5 @@ set(EXTERNAL_DIRS ${EXTERNAL_DIRS} PARENT_SCOPE)
 
 # raylib
 add_subdirectory(raylib)
+
+add_subdirectory(eigen)
