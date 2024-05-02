@@ -2,6 +2,8 @@
 #include <iostream>
 #include <ostream>
 
+#include "Eigen/src/Core/Matrix.h"
+#include "ekf.hpp"
 #include "kf.hpp"
 #include "kf_base.hpp"
 
@@ -61,6 +63,45 @@ void KalmanFilter::update(const Eigen::VectorXd &measurements) {
   }
   auto K = P * H.transpose() * S.inverse();
   X = X + K * (measurements - H * X);
+  Eigen::MatrixXd I(X.size(), X.size());
+  I.setIdentity();
+  P = (I - K * H) * P;
+}
+
+void ExtendedKalmanFilter::setStateUpdateMatrix(
+    state_function_t stateUpdateFunction_) {
+  stateFunction = stateUpdateFunction_;
+}
+void ExtendedKalmanFilter::setStateUpdateMatrices(
+    measurement_function_t measurementFuction_) {
+  measurementFuction = measurementFuction_;
+}
+void ExtendedKalmanFilter::setStateJacobian(
+    state_jacobian_function_t functionThatReturnsF_) {
+  stateJacobian = functionThatReturnsF_;
+}
+void ExtendedKalmanFilter::setMeasurementJacobian(
+    measurement_jacobian_function_t functionThatReturnsH) {
+  measurementJacobian = functionThatReturnsH;
+}
+void ExtendedKalmanFilter::predict() { predict(Eigen::MatrixXd()); }
+void ExtendedKalmanFilter::predict(const Eigen::VectorXd &input) {
+  X = stateFunction(X, input);
+  auto F = stateJacobian(X, input);
+  P = F * P * F.transpose();
+  if (Q.size() != 0) {
+    P += Q;
+  }
+}
+void ExtendedKalmanFilter::update(const Eigen::VectorXd &measurements) {
+  auto zEst = measurementFuction(X);
+  auto H = measurementJacobian(measurements);
+  Eigen::MatrixXd S = H * P * H.transpose();
+  if (R.size() != 0) {
+    S += R;
+  }
+  auto K = P * H.transpose() * S.inverse();
+  X = X + K * (measurements - zEst);
   Eigen::MatrixXd I(X.size(), X.size());
   I.setIdentity();
   P = (I - K * H) * P;
