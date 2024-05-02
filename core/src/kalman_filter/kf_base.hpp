@@ -5,6 +5,12 @@
 
 #include "eigen/Eigen/src/Core/Matrix.h"
 
+typedef Eigen::VectorXd (*state_function_t)(const Eigen::VectorXd &state,
+                                            const Eigen::VectorXd &input,
+                                            void *userData);
+typedef Eigen::VectorXd (*measurement_function_t)(const Eigen::VectorXd &state,
+                                                  void *userData);
+
 class KalmanFilterBase {
  public:
   void setUserData(void *data);
@@ -14,7 +20,7 @@ class KalmanFilterBase {
   void setProcessCovariance(Eigen::MatrixXd processCovariance);
   void setMeasurementCovariance(Eigen::MatrixXd measurementCovariance);
 
-  virtual void predict() = 0;
+  void predict() { predict(Eigen::VectorXd()); }
   virtual void predict(const Eigen::VectorXd &input) = 0;
   virtual void update(const Eigen::VectorXd &measurements) = 0;
 
@@ -27,8 +33,8 @@ class KalmanFilterBase {
  protected:
   void *userData;
 
-  Eigen::VectorXd X;
-  Eigen::MatrixXd P;
-  Eigen::MatrixXd Q;
-  Eigen::MatrixXd R;
+  Eigen::VectorXd X;  // State
+  Eigen::MatrixXd P;  // State covariance
+  Eigen::MatrixXd Q;  // Process covariance
+  Eigen::MatrixXd R;  // Measurement covariance
 };

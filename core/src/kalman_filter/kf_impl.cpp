@@ -45,7 +45,6 @@ void KalmanFilter::setStateUpdateMatrices(const Eigen::MatrixXd &A_,
 }
 void KalmanFilter::setMeasurementMatrix(const Eigen::MatrixXd &H_) { H = H_; }
 
-void KalmanFilter::predict() { predict(Eigen::VectorXd()); }
 void KalmanFilter::predict(const Eigen::VectorXd &input) {
   X = A * X;
   if (B.size() != 0 && input.size() != 0) {
@@ -69,8 +68,8 @@ void KalmanFilter::update(const Eigen::VectorXd &measurements) {
 }
 
 void ExtendedKalmanFilter::setStateUpdateFunction(
-    state_function_t stateUpdateFunction_) {
-  stateFunction = stateUpdateFunction_;
+    state_function_t stateFunction_) {
+  stateFunction = stateFunction_;
 }
 void ExtendedKalmanFilter::setMeasurementFunction(
     measurement_function_t measurementFunction_) {
@@ -84,7 +83,6 @@ void ExtendedKalmanFilter::setMeasurementJacobian(
     measurement_jacobian_function_t functionThatReturnsH_) {
   measurementJacobian = functionThatReturnsH_;
 }
-void ExtendedKalmanFilter::predict() { predict(Eigen::VectorXd()); }
 void ExtendedKalmanFilter::predict(const Eigen::VectorXd &input) {
   X = stateFunction(X, input, userData);
   auto F = stateJacobian(X, input, userData);
