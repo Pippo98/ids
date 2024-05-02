@@ -3,18 +3,20 @@
 #include "kf_base.hpp"
 
 typedef Eigen::VectorXd (*state_function_t)(const Eigen::VectorXd &state,
-                                            const Eigen::VectorXd &input);
-typedef Eigen::VectorXd (*measurement_function_t)(const Eigen::VectorXd &state);
+                                            const Eigen::VectorXd &input,
+                                            void *userData);
+typedef Eigen::VectorXd (*measurement_function_t)(const Eigen::VectorXd &state,
+                                                  void *userData);
 typedef Eigen::MatrixXd (*state_jacobian_function_t)(
-    const Eigen::VectorXd &state, const Eigen::VectorXd &input);
+    const Eigen::VectorXd &state, const Eigen::VectorXd &input, void *userData);
 typedef Eigen::MatrixXd (*measurement_jacobian_function_t)(
-    const Eigen::VectorXd &state);
+    const Eigen::VectorXd &state, void *userData);
 
 // Extended Kalman Filter
 class ExtendedKalmanFilter : public KalmanFilterBase {
  public:
-  void setStateUpdateMatrix(state_function_t stateUpdateFunction);
-  void setStateUpdateMatrices(measurement_function_t measurementFuction);
+  void setStateUpdateFunction(state_function_t stateUpdateFunction);
+  void setMeasurementFunction(measurement_function_t measurementFuction);
   void setStateJacobian(state_jacobian_function_t functionThatReturnsF);
   void setMeasurementJacobian(
       measurement_jacobian_function_t functionThatReturnsH);
@@ -25,7 +27,7 @@ class ExtendedKalmanFilter : public KalmanFilterBase {
 
  private:
   state_function_t stateFunction;
-  measurement_function_t measurementFuction;
+  measurement_function_t measurementFunction;
 
   state_jacobian_function_t stateJacobian;
   measurement_jacobian_function_t measurementJacobian;
