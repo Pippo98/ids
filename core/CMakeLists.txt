@@ -56,8 +56,9 @@ target_sources(
 target_link_libraries(map raylib)
 
 add_library(kalman_filters
+    SHARED
     ${CDIR}/src/kalman_filter/kf_impl.cpp)
-target_link_libraries(kalman_filters eigen)
+target_link_libraries(kalman_filters Eigen3::Eigen)
 
 add_executable(prj ${CDIR}/executables/prj/main.cpp)
 target_link_libraries(prj PUBLIC raylib agent communication voronoi map)

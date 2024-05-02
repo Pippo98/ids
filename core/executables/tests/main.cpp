@@ -7,6 +7,7 @@
 #include "kalman_filter/ekf.hpp"
 #include "kalman_filter/kf.hpp"
 #include "kalman_filter/kf_base.hpp"
+#include "kalman_filter/ukf.hpp"
 #include "raylib.h"
 #include "raymath.h"
 
@@ -16,6 +17,8 @@ int main(void) {
 
   KalmanFilter kf;
   Eigen::VectorXd state(4);
+  state.setZero();
+  state(1) = state(3) = 1.0;
   Eigen::MatrixXd A(4, 4);
   A.setIdentity();
   A(0, 1) = DT;
@@ -87,9 +90,19 @@ int main(void) {
   ekf.setProcessCovariance(Q);
   ekf.setMeasurementCovariance(R);
 
+  UnscentedKalmanFilter ukf;
+  ukf.setState(state);
+  ukf.setUserData(&DT);
+  ukf.setStateCovariance(P);
+  ukf.setProcessCovariance(Q);
+  ukf.setMeasurementCovariance(R);
+  ukf.setStateUpdateFunction(stateUpdate);
+  ukf.setMeasurementFunction(measurementFunction);
+
   for (size_t i = 0; i <= N; i++) {
-    kf.KalmanFilterBase::predict();
-    ekf.KalmanFilterBase::predict();
+    // kf.KalmanFilterBase::predict();
+    // ekf.KalmanFilterBase::predict();
+    ukf.KalmanFilterBase::predict();
 
     if (i % 10 == 0) {
       float dist = Vector2Distance(start, end) * i / (float)N;
@@ -97,13 +110,16 @@ int main(void) {
       pos.x += rand() / (float)RAND_MAX * 0.5;
       pos.y += rand() / (float)RAND_MAX * 0.5;
       Eigen::Vector2d measurements{pos.x, pos.y};
-      kf.update(measurements);
-      ekf.update(measurements);
+      // kf.update(measurements);
+      // ekf.update(measurements);
+      // ukf.update(measurements);
     }
-    printf("\n-- KF --\n");
-    kf.print();
-    printf("-- EKF --\n");
-    ekf.print();
+    // printf("\n-- KF --\n");
+    // kf.print();
+    // printf("-- EKF --\n");
+    // ekf.print();
+    printf("-- UKF --\n");
+    ukf.print();
   }
   // kf.print();
   // ekf.print();

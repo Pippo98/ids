@@ -15,10 +15,10 @@ class KalmanFilterBase {
  public:
   void setUserData(void *data);
 
-  void setState(Eigen::VectorXd state);
-  void setStateCovariance(Eigen::MatrixXd stateCovariance);
-  void setProcessCovariance(Eigen::MatrixXd processCovariance);
-  void setMeasurementCovariance(Eigen::MatrixXd measurementCovariance);
+  void setState(const Eigen::VectorXd &state);
+  void setStateCovariance(const Eigen::MatrixXd &stateCovariance);
+  void setProcessCovariance(const Eigen::MatrixXd &processCovariance);
+  void setMeasurementCovariance(const Eigen::MatrixXd &measurementCovariance);
 
   void predict() { predict(Eigen::VectorXd()); }
   virtual void predict(const Eigen::VectorXd &input) = 0;

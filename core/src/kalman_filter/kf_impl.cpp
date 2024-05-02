@@ -12,15 +12,17 @@
 
 void KalmanFilterBase::setUserData(void *data) { userData = data; }
 
-void KalmanFilterBase::setState(Eigen::VectorXd state) { X = state; }
-void KalmanFilterBase::setStateCovariance(Eigen::MatrixXd stateCovariance) {
+void KalmanFilterBase::setState(const Eigen::VectorXd &state) { X = state; }
+void KalmanFilterBase::setStateCovariance(
+    const Eigen::MatrixXd &stateCovariance) {
   P = stateCovariance;
 }
-void KalmanFilterBase::setProcessCovariance(Eigen::MatrixXd processCovariance) {
+void KalmanFilterBase::setProcessCovariance(
+    const Eigen::MatrixXd &processCovariance) {
   Q = processCovariance;
 }
 void KalmanFilterBase::setMeasurementCovariance(
-    Eigen::MatrixXd measurementCovariance) {
+    const Eigen::MatrixXd &measurementCovariance) {
   R = measurementCovariance;
 }
 
@@ -65,7 +67,7 @@ void KalmanFilter::update(const Eigen::VectorXd &measurements) {
   }
   auto K = P * H.transpose() * S.inverse();
   X = X + K * (measurements - H * X);
-  Eigen::MatrixXd I(X.size(), X.size());
+  Eigen::MatrixXd I(X.rows(), X.rows());
   I.setIdentity();
   P = (I - K * H) * P;
 }
@@ -103,12 +105,15 @@ void ExtendedKalmanFilter::update(const Eigen::VectorXd &measurements) {
   }
   auto K = P * H.transpose() * S.inverse();
   X = X + K * (measurements - zEst);
-  Eigen::MatrixXd I(X.size(), X.size());
+  Eigen::MatrixXd I(X.rows(), X.rows());
   I.setIdentity();
   P = (I - K * H) * P;
 }
 
-UnscentedKalmanFilter::UnscentedKalmanFilter() {}
+UnscentedKalmanFilter::UnscentedKalmanFilter() {
+  sigmaPointsAlpha = 1.0;
+  sigmaPointsBeta = 2.0;
+}
 
 void UnscentedKalmanFilter::setStateUpdateFunction(
     state_function_t stateFunction_) {
@@ -122,15 +127,15 @@ void UnscentedKalmanFilter::setMeasurementFunction(
 void UnscentedKalmanFilter::computeMerweScaledSigmaPoints(
     const Eigen::VectorXd &state, const Eigen::MatrixXd &P,
     MerweScaledSigmaPoints &outPoints) {
-  assert(state.size() == 0);
-  size_t n = state.size();
-  double kappa = 3 - n;
+  assert(state.size() != 0);
+  size_t n = state.rows();
+  double kappa = 3.0 - n;
   double lambda = sigmaPointsAlpha * sigmaPointsAlpha * (n + kappa) - n;
 
   double allWeightsValue = 1 / (2 * (n + lambda));
 
   outPoints.sigmas.resize(n, 2 * n + 1);
-  outPoints.meanWeights.resize(outPoints.sigmas.size());
+  outPoints.meanWeights.resize(outPoints.sigmas.cols());
   outPoints.meanWeights.setConstant(allWeightsValue);
   outPoints.covarianceWeights = outPoints.meanWeights;
 
@@ -152,12 +157,12 @@ void UnscentedKalmanFilter::computeMeanAndCovariance(
     const MerweScaledSigmaPoints &points,
     const Eigen::MatrixXd &additionalCovariance, Eigen::VectorXd &outX,
     Eigen::MatrixXd &outP) {
-  outP.resize(points.sigmas.size(), points.sigmas.size());
-  outX = points.sigmas * points.meanWeights;
+  outP.resize(points.sigmas.rows(), points.sigmas.rows());
   outP.setZero();
-  for (Eigen::Index i = 0; i < points.covarianceWeights.cols(); ++i) {
+  outX = points.sigmas * points.meanWeights;
+  for (Eigen::Index i = 0; i < points.covarianceWeights.rows(); ++i) {
     const auto y = points.sigmas.col(i) - outX;
-    outP = outP + points.covarianceWeights(i) * (y * y.transpose());
+    outP += points.covarianceWeights(i) * (y * y.transpose());
   }
   if (additionalCovariance.size() != 0) {
     outP += additionalCovariance;
@@ -166,12 +171,12 @@ void UnscentedKalmanFilter::computeMeanAndCovariance(
 
 Eigen::MatrixXd UnscentedKalmanFilter::computeKalmanGain(
     const MerweScaledSigmaPoints &stateSigmaPoints,
-    const MerweScaledSigmaPoints &measureSigmaPoints,
+    const Eigen::MatrixXd &measureSigmaPoints,
     const Eigen::VectorXd &stateEstimate,
     const Eigen::VectorXd &measureEstimate,
     const Eigen::MatrixXd &measurementCovariance) {
-  size_t n = X.size();
-  size_t m = measureEstimate.size();
+  size_t n = X.rows();
+  size_t m = measureEstimate.rows();
   size_t nSigmas = stateSigmaPoints.sigmas.cols();
 
   Eigen::MatrixXd crossCovariance(n, m);
@@ -179,7 +184,7 @@ Eigen::MatrixXd UnscentedKalmanFilter::computeKalmanGain(
     crossCovariance +=
         stateSigmaPoints.covarianceWeights(i) *
         ((stateSigmaPoints.sigmas.col(i) - stateEstimate) *
-         (measureSigmaPoints.sigmas.col(i) - measureEstimate).transpose());
+         (measureSigmaPoints.col(i) - measureEstimate).transpose());
   }
   return crossCovariance * measurementCovariance.inverse();
 }
@@ -194,14 +199,18 @@ void UnscentedKalmanFilter::predict(const Eigen::VectorXd &input) {
 void UnscentedKalmanFilter::update(const Eigen::VectorXd &measurements) {
   MerweScaledSigmaPoints measureSigmaPoints;
   computeMerweScaledSigmaPoints(X, P, measureSigmaPoints);
+  Eigen::MatrixXd measuresFromEstimate(measurements.rows(),
+                                       measureSigmaPoints.sigmas.cols());
   for (Eigen::Index i = 0; i < measureSigmaPoints.sigmas.cols(); ++i) {
-    measureSigmaPoints.sigmas.col(i) =
+    measuresFromEstimate.col(i) =
         measurementFunction(measureSigmaPoints.sigmas.col(i), userData);
   }
+  measureSigmaPoints.sigmas = measuresFromEstimate;
   Eigen::VectorXd zEst;
   Eigen::MatrixXd Pz;
   computeMeanAndCovariance(measureSigmaPoints, R, zEst, Pz);
-  auto K = computeKalmanGain(stateSigmaPoints, measureSigmaPoints, X, zEst, Pz);
+  auto K =
+      computeKalmanGain(stateSigmaPoints, measuresFromEstimate, X, zEst, Pz);
 
   X = X + K * (measurements - zEst);
   P = P - K * Pz * K.transpose();

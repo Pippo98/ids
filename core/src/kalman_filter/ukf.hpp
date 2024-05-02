@@ -9,7 +9,7 @@ struct MerweScaledSigmaPoints {
 };
 
 // Unscented Kalman Filter
-class UnscentedKalmanFilter : KalmanFilterBase {
+class UnscentedKalmanFilter : public KalmanFilterBase {
  public:
   UnscentedKalmanFilter();
 
@@ -28,7 +28,7 @@ class UnscentedKalmanFilter : KalmanFilterBase {
                                 Eigen::VectorXd &outX, Eigen::MatrixXd &outP);
   Eigen::MatrixXd computeKalmanGain(
       const MerweScaledSigmaPoints &stateSigmaPoints,
-      const MerweScaledSigmaPoints &measuresSigmas,
+      const Eigen::MatrixXd &measuresSigmas,
       const Eigen::VectorXd &stateEstimate,
       const Eigen::VectorXd &measureEstimate,
       const Eigen::MatrixXd &measurementCovariance);
