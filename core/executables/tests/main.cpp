@@ -6,6 +6,7 @@
 #include "Eigen/src/Core/Matrix.h"
 #include "kalman_filter/ekf.hpp"
 #include "kalman_filter/kf.hpp"
+#include "kalman_filter/kf_base.hpp"
 #include "raylib.h"
 #include "raymath.h"
 
@@ -87,8 +88,8 @@ int main(void) {
   ekf.setMeasurementCovariance(R);
 
   for (size_t i = 0; i <= N; i++) {
-    kf.predict();
-    ekf.predict();
+    kf.KalmanFilterBase::predict();
+    ekf.KalmanFilterBase::predict();
 
     if (i % 10 == 0) {
       float dist = Vector2Distance(start, end) * i / (float)N;
