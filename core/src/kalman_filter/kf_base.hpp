@@ -3,8 +3,6 @@
 #include <Eigen/Core>
 #include <ostream>
 
-#include "eigen/Eigen/src/Core/Matrix.h"
-
 typedef Eigen::VectorXd (*state_function_t)(const Eigen::VectorXd &state,
                                             const Eigen::VectorXd &input,
                                             void *userData);
@@ -24,8 +22,8 @@ class KalmanFilterBase {
   virtual void predict(const Eigen::VectorXd &input) = 0;
   virtual void update(const Eigen::VectorXd &measurements) = 0;
 
-  Eigen::VectorXd getState();
-  Eigen::MatrixXd getCovariance();
+  const Eigen::VectorXd &getState() const;
+  const Eigen::MatrixXd &getCovariance() const;
 
   void print();
   void printToStream(std::ostream &stream);

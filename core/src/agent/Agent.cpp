@@ -8,6 +8,50 @@
 
 using namespace std;
 
+void constructAgentUKF(UnscentedKalmanFilter &ukf) {
+  auto stateUpdate = [](const Eigen::VectorXd &statePrev,
+                        const Eigen::VectorXd &inputs, void *userData) {
+    (void)inputs;
+    double DT = *(float *)userData;
+    auto state = statePrev;
+    state(0) = statePrev(0) + statePrev(1) * DT;
+    state(1) = statePrev(1);
+    state(2) = statePrev(2) + statePrev(3) * DT;
+    state(3) = statePrev(3);
+    state(4) = statePrev(4) + statePrev(5) * DT;
+    state(5) = statePrev(5);
+    return state;
+  };
+  auto measurementFunction = [](const Eigen::VectorXd &state, void *userData) {
+    (void)userData;
+    Eigen::VectorXd measures(3);
+    measures(0) = state(0);
+    measures(1) = state(2);
+    measures(2) = state(4);
+    return measures;
+  };
+
+  Eigen::VectorXd state(6);
+  state.setZero();
+  state(1) = state(3) = state(5) = 1.0;
+  Eigen::MatrixXd P(6, 6);
+  P.setIdentity();
+  P *= 0.1;
+
+  auto Q = P;
+
+  Eigen::MatrixXd R(3, 3);
+  R.setIdentity();
+  R = R * 0.1;
+
+  ukf.setState(state);
+  ukf.setStateCovariance(P);
+  ukf.setProcessCovariance(Q);
+  ukf.setMeasurementCovariance(R);
+  ukf.setStateUpdateFunction(stateUpdate);
+  ukf.setMeasurementFunction(measurementFunction);
+}
+
 Agent::Agent(Vector3 position, const Map &posMap, std::string name,
              Broker *broker)
     : position(position), posMap(posMap), name(name), broker(broker) {
@@ -15,12 +59,12 @@ Agent::Agent(Vector3 position, const Map &posMap, std::string name,
   this->solver = VoronoiSolver();
   this->myVoronoiID =
       solver.addVoronoi((Vector2){position.x, position.y}, watchRadius);
-  this->agentsVoronoiLookup = ::map<string, size_t>();
 }
 
 Agent::~Agent() {}
 
 void Agent::Step(float deltaTime) {
+  stepDT = deltaTime;
   if ((Vector3Distance(this->position, this->targetPosition) <= 10)) {
     this->isOnTarget = true;
   } else {
@@ -42,7 +86,7 @@ void Agent::Step(float deltaTime) {
       this->broker->BroadcastMessage(this, message);
     }
   } else {
-    Move(deltaTime);
+    Move();
   }
 
   SolveVoronoi();
@@ -69,23 +113,32 @@ void Agent::BroadcastPosition() {
   }
 }
 
-void Agent::Move(float deltaTime) {
+void Agent::Move() {
   this->position =
-      Vector3MoveTowards(this->position, this->targetPosition, 100 * deltaTime);
+      Vector3MoveTowards(this->position, this->targetPosition, 100 * stepDT);
 }
 
 bool Agent::OnMessage(Message &message) {
   switch (message.type) {
     case Message::POSITION: {
-      const auto [_, inserted] = this->agentsPositions.insert_or_assign(
-          message.sender, message.data.agentPosition);
-      if (inserted) {
+      bool newAgent =
+          agentsPositions.find(message.sender) == agentsPositions.end();
+      auto &agentData = agentsPositions[message.sender];
+      UnscentedKalmanFilter &kf = agentsPositions[message.sender].kf;
+      if (newAgent) {
+        agentData.name = message.sender;
+        constructAgentUKF(kf);
+        kf.setUserData(&stepDT);
+        kf.KalmanFilterBase::predict();
         size_t newVoronoiID =
-            solver.addVoronoi((Vector2){message.data.agentPosition.position.x,
-                                        message.data.agentPosition.position.y},
-                              watchRadius);
-        agentsVoronoiLookup[message.sender] = newVoronoiID;
+            solver.addVoronoi((Vector2){0.0f, 0.0f}, watchRadius);
+        agentData.voronoiId = newVoronoiID;
       }
+      kf.update(Eigen::Vector3d(message.data.agentPosition.position.x,
+                                message.data.agentPosition.position.y,
+                                message.data.agentPosition.position.z));
+      solver.getVoronoi(agentData.voronoiId)
+          .setPosition(agentData.getPosition2D());
       return true;
     }
     case Message::AGREEMENT:
@@ -99,9 +152,9 @@ bool Agent::OnMessage(Message &message) {
 void Agent::SolveVoronoi() {
   solver.getVoronoi(myVoronoiID).setPosition((Vector2){position.x, position.y});
 
-  for (const auto &[name, id] : agentsVoronoiLookup) {
-    solver.getVoronoi(id).setPosition((Vector2){
-        agentsPositions[name].position.x, agentsPositions[name].position.y});
+  for (auto &[name, data] : agentsPositions) {
+    data.kf.KalmanFilterBase::predict();
+    solver.getVoronoi(data.voronoiId).setPosition(data.getPosition2D());
   }
   this->solver.solve();
   for (const auto &[id, cell] : solver.getCells()) {

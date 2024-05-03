@@ -1,16 +1,27 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <map>
 
 #include "communication/Clients.hpp"
 #include "communication/Message.hpp"
+#include "kalman_filter/kf.hpp"
+#include "kalman_filter/ukf.hpp"
 #include "voronoi/Voronoi.hpp"
 
 struct AgentsPositions {
   std::string name;
-  Vector3 position;
-  Voronoi *voronoi;
+  size_t voronoiId;
+  UnscentedKalmanFilter kf;
   bool isTarget;
+  Vector2 getPosition2D() const {
+    const auto &state = kf.getState();
+    return (Vector2){(float)state(0), (float)state(2)};
+  }
+  Vector3 getPosition3D() const {
+    const auto &state = kf.getState();
+    return (Vector3){(float)state(0), (float)state(2), (float)state(4)};
+  }
 };
 
 /**
@@ -22,6 +33,9 @@ struct AgentsPositions {
  * Voronoi Cells
  */
 
+class Map;
+class Broker;
+
 class Agent : public ICommunicationClient {
  public:
   /**
@@ -30,7 +44,8 @@ class Agent : public ICommunicationClient {
    * @param Broker: Broker instance to communicate with other actors
    */
 
-  Agent(Vector3, const class Map &, std::string, class Broker *);
+  Agent(Vector3 initialPosition, const Map &map, std::string name,
+        Broker *broker);
 
   /**
    * Internal step function
@@ -39,7 +54,7 @@ class Agent : public ICommunicationClient {
    *
    * TODO: Understand how can we reproduce the simulation time indipendent
    */
-  void Step(float);
+  void Step(float dt);
 
   /*************************
    * Communication Methods *
@@ -58,7 +73,7 @@ class Agent : public ICommunicationClient {
    *
    * @param Vector3 Pointer: List of positions of all the agents in the world
    */
-  bool OnMessage(Message &) override;
+  bool OnMessage(Message &message) override;
 
   /***********************
    * Voronoi Methods     *
@@ -88,9 +103,10 @@ class Agent : public ICommunicationClient {
    * Move the agent towards the target position
    * @param float deltaTime: The time passed since the last frame
    */
-  void Move(float);
+  void Move();
 
  private:
+  float stepDT;
   // Current exact position of Agent
   Vector3 position;
   const Map &posMap;
@@ -110,14 +126,13 @@ class Agent : public ICommunicationClient {
   std::string name;
 
   // Broker instance used to communicate with other actors in World
-  class Broker *broker;
+  Broker *broker;
 
-  class VoronoiSolver solver;
+  VoronoiSolver solver;
 
   // Agreement status
   bool agreement = false;
-  std::map<std::string, AgentPosition> agentsPositions;
-  std::map<std::string, size_t> agentsVoronoiLookup;
+  std::map<std::string, AgentsPositions> agentsPositions;
 
  public:
   /**
