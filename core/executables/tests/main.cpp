@@ -12,13 +12,14 @@
 #include "raymath.h"
 
 int main(void) {
+  srand(1);
   size_t N = 1000;
   double DT = 0.01;
 
-  KalmanFilter kf;
   Eigen::VectorXd state(4);
   state.setZero();
   state(1) = state(3) = 1.0;
+
   Eigen::MatrixXd A(4, 4);
   A.setIdentity();
   A(0, 1) = DT;
@@ -27,31 +28,25 @@ int main(void) {
   Eigen::MatrixXd P(4, 4);
   P.setIdentity();
   P *= 0.1;
+
   auto Q = P;
+
   Eigen::MatrixXd H(2, 4);
   H(0, 0) = 1;
   H(1, 2) = 1;
+
   Eigen::MatrixXd R(2, 2);
   R.setIdentity();
   R = R * 0.1;
-
-  kf.setState(state);
-  kf.setStateCovariance(P);
-  kf.setStateUpdateMatrix(A);
-  kf.setMeasurementMatrix(H);
-  kf.setProcessCovariance(Q);
-  kf.setMeasurementCovariance(R);
-
-  Vector2 start;
-  Vector2 end{100, 100};
-  double speed = Vector2Distance(start, end) / (N * DT);
 
   auto stateUpdate = [](const Eigen::VectorXd &statePrev,
                         const Eigen::VectorXd &inputs, void *userData) {
     double DT = *(double *)userData;
     auto state = statePrev;
     state(0) = statePrev(0) + statePrev(1) * DT;
+    state(1) = statePrev(1);
     state(2) = statePrev(2) + statePrev(3) * DT;
+    state(3) = statePrev(3);
     return state;
   };
   auto measurementFunction = [](const Eigen::VectorXd &state, void *userData) {
@@ -74,10 +69,19 @@ int main(void) {
   auto measureJacobianFunction = [](const Eigen::VectorXd &state,
                                     void *userData) {
     Eigen::MatrixXd jacobianH(2, 4);
+    jacobianH.setZero();
     jacobianH(0, 0) = 1;
     jacobianH(1, 2) = 1;
     return jacobianH;
   };
+
+  KalmanFilter kf;
+  kf.setState(state);
+  kf.setStateCovariance(P);
+  kf.setStateUpdateMatrix(A);
+  kf.setMeasurementMatrix(H);
+  kf.setProcessCovariance(Q);
+  kf.setMeasurementCovariance(R);
 
   ExtendedKalmanFilter ekf;
   ekf.setState(state);
@@ -99,9 +103,11 @@ int main(void) {
   ukf.setStateUpdateFunction(stateUpdate);
   ukf.setMeasurementFunction(measurementFunction);
 
+  Vector2 start{0, 0};
+  Vector2 end{100, 100};
   for (size_t i = 0; i <= N; i++) {
-    // kf.KalmanFilterBase::predict();
-    // ekf.KalmanFilterBase::predict();
+    kf.KalmanFilterBase::predict();
+    ekf.KalmanFilterBase::predict();
     ukf.KalmanFilterBase::predict();
 
     if (i % 10 == 0) {
@@ -110,19 +116,17 @@ int main(void) {
       pos.x += rand() / (float)RAND_MAX * 0.5;
       pos.y += rand() / (float)RAND_MAX * 0.5;
       Eigen::Vector2d measurements{pos.x, pos.y};
-      // kf.update(measurements);
-      // ekf.update(measurements);
-      // ukf.update(measurements);
+      kf.update(measurements);
+      ekf.update(measurements);
+      ukf.update(measurements);
     }
-    // printf("\n-- KF --\n");
-    // kf.print();
-    // printf("-- EKF --\n");
-    // ekf.print();
-    printf("-- UKF --\n");
-    ukf.print();
   }
-  // kf.print();
-  // ekf.print();
+  printf("\n-- KF --\n");
+  kf.print();
+  printf("-- EKF --\n");
+  ekf.print();
+  printf("-- UKF --\n");
+  ukf.print();
 
   return 0;
 }
