@@ -80,7 +80,6 @@ void Voronoi::calculateCenterOfMass(const Map &map) const {
     if (!pointInVoronoi(sample)) {
       continue;
     }
-    DrawCircle(sample.x, sample.y, 1.0, BLACK);
     float density = getDensity(map, sample);
     mass += density;
     centerOfMass.x += density * sample.x;

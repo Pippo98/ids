@@ -160,4 +160,7 @@ void Agent::SolveVoronoi() {
   for (const auto &[id, cell] : solver.getCells()) {
     cell.calculateCenterOfMass(posMap);
   }
+  auto com = solver.getVoronoi(myVoronoiID).getLastCenterOfMass();
+  targetPosition.x = com.x;
+  targetPosition.y = com.y;
 }

@@ -28,12 +28,10 @@ int main(void) {
   camera.rotation = 0.0f;
   camera.zoom = 1.0f;
 
-  Map map((Vector2){-200, 200}, (Vector2){200, -200}, 5);
+  Map map((Vector2){-200, 200}, (Vector2){200, -200}, 20);
   Broker broker;
   // Init Agents
 
-  VoronoiSolver solver = VoronoiTest();
-  size_t ID_v1 = solver.addVoronoi(Vector2{0, 0}, 100);
   auto agent2pos = Vector3{0, 0, 0};
   Agent agent = Agent(Vector3{10, 0, 0}, map, "Tony", &broker);
   Agent agent2 = Agent(agent2pos, map, "Berto", &broker);
@@ -47,10 +45,7 @@ int main(void) {
     camera.target.x = player.x;
     camera.target.y = player.y;
     agent.SetTargetPosition(Vector3{player.x, player.y, 0});
-    agent2.SetTargetPosition(agent2pos);
-    agent.Step(deltaTime);
-    agent2.Step(deltaTime);
-    agent3.Step(deltaTime);
+    // agent2.SetTargetPosition(agent2pos);
 
     // FLOW
     // agent get positions of all Agents
@@ -85,20 +80,17 @@ int main(void) {
     Vector2 dimension{br.x - tl.x, tl.y - br.y};
     DrawRectangleLines(tl.x, br.y, dimension.x, dimension.y, BLACK);
 
-    solver.getVoronoi(ID_v1).setPosition(mousePosition);
-    solver.solve();
-
-    for (const auto &[_, cell] : solver.getCells()) {
-      cell.calculateCenterOfMass(map);
-    }
-    solver.draw();
-
     DrawLine(-screenWidth * 10, 0, screenWidth * 10, 0, GREEN);
 
     DrawRectangle(player.x, player.y, player.width, player.height, BLUE);
 
+    agent.Step(deltaTime);
+    agent2.Step(deltaTime);
+    agent3.Step(deltaTime);
+
     DrawAgent(agent);
     DrawAgent(agent2);
+    DrawAgent(agent3);
 
     EndMode2D();
 
