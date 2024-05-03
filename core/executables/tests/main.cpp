@@ -13,8 +13,8 @@
 
 int main(void) {
   srand(1);
-  size_t N = 1000;
-  double DT = 0.01;
+  size_t N = 500;
+  double DT = 0.05;
 
   Eigen::VectorXd state(4);
   state.setZero();
@@ -28,6 +28,7 @@ int main(void) {
   Eigen::MatrixXd P(4, 4);
   P.setIdentity();
   P *= 0.1;
+  P(2, 2) = 0.2;
 
   auto Q = P;
 
@@ -103,6 +104,9 @@ int main(void) {
   ukf.setStateUpdateFunction(stateUpdate);
   ukf.setMeasurementFunction(measurementFunction);
 
+  std::vector<Eigen::VectorXd> positions;
+  std::vector<Eigen::VectorXd> covariances;
+
   Vector2 start{0, 0};
   Vector2 end{100, 100};
   for (size_t i = 0; i <= N; i++) {
@@ -114,12 +118,14 @@ int main(void) {
       float dist = Vector2Distance(start, end) * i / (float)N;
       auto pos = Vector2MoveTowards(start, end, dist);
       pos.x += rand() / (float)RAND_MAX * 0.5;
-      pos.y += rand() / (float)RAND_MAX * 0.5;
+      pos.y += rand() / (float)RAND_MAX * 1.0;
       Eigen::Vector2d measurements{pos.x, pos.y};
       kf.update(measurements);
       ekf.update(measurements);
       ukf.update(measurements);
     }
+    positions.push_back(ukf.getState());
+    covariances.push_back(ukf.getCovariance().diagonal());
   }
   printf("\n-- KF --\n");
   kf.print();
@@ -128,5 +134,47 @@ int main(void) {
   printf("-- UKF --\n");
   ukf.print();
 
+  const int screenWidth = 1600;
+  const int screenHeight = 950;
+
+  InitWindow(screenWidth, screenHeight, "IDS");
+  SetTargetFPS(60);
+  Camera2D camera;
+  Rectangle player = {0, 0, 0, 0};
+  camera.target = (Vector2){player.x, player.y};
+  camera.offset = (Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
+  camera.rotation = 0.0f;
+  camera.zoom = 1.0f;
+
+  while (!WindowShouldClose()) {
+    if (IsKeyDown(KEY_W))
+      player.y -= 2;
+    else if (IsKeyDown(KEY_S))
+      player.y += 2;
+    if (IsKeyDown(KEY_D))
+      player.x += 2;
+    else if (IsKeyDown(KEY_A))
+      player.x -= 2;
+    if (IsKeyDown(KEY_Q))
+      camera.zoom += 0.01;
+    else if (IsKeyDown(KEY_E))
+      camera.zoom -= 0.01;
+    camera.target.x = player.x;
+    camera.target.y = player.y;
+
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+    BeginMode2D(camera);
+
+    for (size_t i = 0; i < positions.size(); i++) {
+      DrawCircle(positions[i](0) * 10.0, positions[i](2) * 10, 1, BLUE);
+      DrawEllipseLines(positions[i](0) * 10.0, positions[i](2) * 10,
+                       covariances[i](0) * 10.0, covariances[i](2) * 10.0,
+                       BLUE);
+    }
+
+    EndMode2D();
+    EndDrawing();
+  }
   return 0;
 }
