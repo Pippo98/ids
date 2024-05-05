@@ -4,10 +4,10 @@
 #include <unsupported/Eigen/MatrixFunctions>
 
 #include "Eigen/src/Core/Matrix.h"
-#include "kalman_filter/ekf.hpp"
-#include "kalman_filter/kf.hpp"
-#include "kalman_filter/kf_base.hpp"
-#include "kalman_filter/ukf.hpp"
+#include "kflib/src/ekf.hpp"
+#include "kflib/src/kf.hpp"
+#include "kflib/src/kf_base.hpp"
+#include "kflib/src/ukf.hpp"
 #include "raylib.h"
 #include "raymath.h"
 
@@ -50,7 +50,8 @@ int main(void) {
     state(3) = statePrev(3);
     return state;
   };
-  auto measurementFunction = [](const Eigen::VectorXd &state, void *userData) {
+  auto measurementFunction = [](const Eigen::VectorXd &state,
+                                const Eigen::VectorXd &inputs, void *userData) {
     Eigen::VectorXd measures(2);
     measures(0) = state(0);
     measures(1) = state(2);
