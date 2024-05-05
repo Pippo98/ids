@@ -1,6 +1,6 @@
 [submodule "external/raylib"]
 	path = external/raylib
 	url = git@github.com:raysan5/raylib.git
-[submodule "external/eigen"]
-	path = external/eigen
-	url = https://gitlab.com/libeigen/eigen.git
+[submodule "external/kflib"]
+	path = external/kflib
+	url = git@github.com:Pippo98/kflib.git

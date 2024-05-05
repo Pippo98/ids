@@ -22,7 +22,8 @@ void constructAgentUKF(UnscentedKalmanFilter &ukf) {
     state(5) = statePrev(5);
     return state;
   };
-  auto measurementFunction = [](const Eigen::VectorXd &state, void *userData) {
+  auto measurementFunction = [](const Eigen::VectorXd &state,
+                                const Eigen::VectorXd &inputs, void *userData) {
     (void)userData;
     Eigen::VectorXd measures(3);
     measures(0) = state(0);

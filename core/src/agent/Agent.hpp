@@ -5,8 +5,8 @@
 
 #include "communication/Clients.hpp"
 #include "communication/Message.hpp"
-#include "kalman_filter/kf.hpp"
-#include "kalman_filter/ukf.hpp"
+#include "kflib/src/kf.hpp"
+#include "kflib/src/ukf.hpp"
 #include "voronoi/Voronoi.hpp"
 
 struct AgentsPositions {

@@ -8,19 +8,13 @@ include_directories(
   ${CDIR}/src
 )
 
-
-add_library(kalman_filters
-    SHARED
-    ${CDIR}/src/kalman_filter/kf_impl.cpp)
-target_link_libraries(kalman_filters Eigen3::Eigen)
-
 add_library(agent)
 target_sources(
   agent
   PRIVATE
   ${CDIR}/src/agent/Agent.cpp
   )
-target_link_libraries(agent raylib kalman_filters)
+target_link_libraries(agent raylib kflib)
 
 add_library(communication)
 target_sources(
@@ -63,7 +57,7 @@ target_sources(
 target_link_libraries(map raylib)
 
 add_executable(prj ${CDIR}/executables/prj/main.cpp)
-target_link_libraries(prj PUBLIC raylib agent communication voronoi map)
+target_link_libraries(prj PUBLIC raylib agent communication voronoi map kflib)
 
 add_executable(test ${CDIR}/executables/tests/main.cpp)
-target_link_libraries(test PUBLIC raylib agent communication voronoi map kalman_filters)
+target_link_libraries(test PUBLIC raylib agent communication voronoi map kflib)
