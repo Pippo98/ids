@@ -84,6 +84,12 @@ class Agent : public ICommunicationClient {
   void DrawVoronoi() { this->solver.draw(); };
 
   /***********************
+   * Voronoi Methods     *
+   ***********************/
+
+  void UpdateMap();
+
+  /***********************
    * Getters and Setters *
    ***********************/
 

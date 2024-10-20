@@ -91,6 +91,7 @@ void Agent::Step(float deltaTime) {
   }
 
   SolveVoronoi();
+  UpdateMap();
 
   if (isAgreeing) {
     // Calculate next target pos with Voronoi
@@ -103,6 +104,8 @@ void Agent::Step(float deltaTime) {
   // this->SetTargetPosition(
   //     {v.getLastCenterOfMass().x, v.getLastCenterOfMass().y, 0});
 }
+
+void Agent::UpdateMap() { this->posMap.visitLocation(*this); }
 
 void Agent::BroadcastPosition() {
   // TODO: Randomize intervals

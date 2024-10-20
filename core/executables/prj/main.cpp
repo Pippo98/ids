@@ -34,8 +34,14 @@ int main(void) {
 
   auto agent2pos = Vector3{0, 0, 0};
   Agent agent = Agent(Vector3{10, 0, 0}, map, "Tony", &broker);
-  Agent agent2 = Agent(agent2pos, map, "Berto", &broker);
-  Agent agent3 = Agent(Vector3{10, 0, 0}, map, "Pippo", &broker);
+  // Agent agent2 = Agent(agent2pos, map, "Berto", &broker);
+  // Agent agent3 = Agent(Vector3{10, 0, 0}, map, "Pippo", &broker);
+
+  // Craete a list of Agents
+  std::vector<Agent *> agents;
+  agents.push_back(&agent);
+  // agents.push_back(&agent2);
+  // agents.push_back(&agent3);
 
   while (!WindowShouldClose()) {
     HandleKeyboardInput(player, agent2pos, camera);
@@ -72,9 +78,17 @@ int main(void) {
     for (float x = tl.x; x < br.x; x += res) {
       for (float y = br.y; y < tl.y; y += res) {
         float conf = map.getConfidence((Vector2){x, y});
-        Color green = DARKGREEN;
-        green.a = conf;
-        DrawRectangle(x, y, res, res, green);
+        if (conf > 0) {
+          Color green = DARKGREEN;
+          green.a = conf;
+          DrawRectangle(x, y, res, res, green);
+        } else if (conf < 0) {
+          Color red = RED;
+          red.a = -(2.55 * conf);
+          DrawRectangle(x, y, res, res, red);
+        }
+        if (map.getTileType((Vector2){x, y}) == TileType::VISITED)
+          DrawRectangle(x, y, res, res, RED);
       }
     }
     Vector2 dimension{br.x - tl.x, tl.y - br.y};
@@ -84,13 +98,13 @@ int main(void) {
 
     DrawRectangle(player.x, player.y, player.width, player.height, BLUE);
 
-    agent.Step(deltaTime);
-    agent2.Step(deltaTime);
-    agent3.Step(deltaTime);
+    for (auto &a : agents) {
+      a->Step(deltaTime);
+    }
 
-    DrawAgent(agent);
-    DrawAgent(agent2);
-    DrawAgent(agent3);
+    for (auto &a : agents) {
+      DrawAgent(*a);
+    }
 
     EndMode2D();
 

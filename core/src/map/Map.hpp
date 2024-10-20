@@ -15,12 +15,14 @@ class Map {
   float getConfidence(Vector2 position) const;
   TileType getTileType(Vector2 position) const;
 
-  void setTileType(Vector2 position, TileType type);
-  void setConfidence(Vector2 position, float confidence);
+  void setTileType(Vector2 position, TileType type) const;
+  void setConfidence(Vector2 position, float confidence) const;
 
   float getResolution() const { return resolution; };
   Vector2 getTopLeftCorner() const { return tl; };
   Vector2 getBottomRightCorner() const { return br; };
+
+  void visitLocation(class Agent &agent) const;
 
  private:
   Vector2 tl;

@@ -4,6 +4,10 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <vector>
+
+#include "agent/Agent.hpp"
+#include "raymath.h"
 
 template <typename ArrType>
 ArrType &Map::mapAtIndex(ArrType *arr, size_t x, size_t y) const {
@@ -59,9 +63,43 @@ TileType Map::getTileType(Vector2 position) const {
   return mapAtPosition(tileTypeMap, position);
 }
 
-void Map::setTileType(Vector2 position, TileType type) {
+void Map::setTileType(Vector2 position, TileType type) const {
   mapAtPosition(tileTypeMap, position) = type;
 }
-void Map::setConfidence(Vector2 position, float confidence) {
+void Map::setConfidence(Vector2 position, float confidence) const {
   mapAtPosition(confidenceMap, position) = confidence;
+}
+
+void Map::visitLocation(Agent &agent) const {
+  if (getTileType({agent.GetPosition().x, agent.GetPosition().y}) ==
+      TileType::EMPTY) {
+    setTileType({agent.GetPosition().x, agent.GetPosition().y},
+                TileType::VISITED);
+  }
+  std::vector<float *> visited;
+  // Update confidence of nearby tiles with a gaussian distribution around the
+  // agent with radiun watchRadius
+  for (float x = agent.GetPosition().x - agent.GetWatchRadius();
+       x < agent.GetPosition().x + agent.GetWatchRadius(); x += 0.5) {
+    for (float y = agent.GetPosition().y - agent.GetWatchRadius();
+         y < agent.GetPosition().y + agent.GetWatchRadius(); y += 0.5) {
+      float distance = Vector2Distance(
+          {x, y}, {agent.GetPosition().x, agent.GetPosition().y});
+      float confidence = -(1 - distance / agent.GetWatchRadius());
+      if (distance < agent.GetWatchRadius()) {
+        // TODO: Fix performance issue
+        if (std::find(visited.begin(), visited.end(),
+                      &mapAtPosition(confidenceMap, {x, y})) != visited.end())
+          continue;
+        visited.push_back(&mapAtPosition(confidenceMap, {x, y}));
+        float currentConfidence = getConfidence({x, y});
+        float newConfidence = currentConfidence + confidence;
+        if (newConfidence < -100) {
+          setConfidence({x, y}, -100);
+          continue;
+        }
+        setConfidence({x, y}, newConfidence);
+      }
+    }
+  }
 }
