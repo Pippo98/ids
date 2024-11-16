@@ -37,8 +37,10 @@ release/
 bin/
 
 .cache/
+.idea/
 .vscode/
 build/
 cmake/
+cmake-build-debug/
 
 .DS_Store
