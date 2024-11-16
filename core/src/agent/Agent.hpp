@@ -89,6 +89,13 @@ class Agent : public ICommunicationClient {
 
   void UpdateMap();
 
+  /*************************
+   * Visualization Methods *
+   *************************/
+
+  void Draw();
+
+
   /***********************
    * Getters and Setters *
    ***********************/
@@ -111,6 +118,8 @@ class Agent : public ICommunicationClient {
    */
   void Move();
 
+  void MoveRandomly();
+
  private:
   float stepDT;
   // Current exact position of Agent
@@ -126,6 +135,7 @@ class Agent : public ICommunicationClient {
 
   // Target position for the agent to move to
   Vector3 targetPosition;
+  double moveAngle;
   bool isOnTarget = false;
   double lastUpdateTime = 0;
 
@@ -139,6 +149,9 @@ class Agent : public ICommunicationClient {
   // Agreement status
   bool agreement = false;
   std::map<std::string, AgentsPositions> agentsPositions;
+
+ // Timing
+  double lastTime = 0;
 
  public:
   /**

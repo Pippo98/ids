@@ -24,9 +24,11 @@ class Map {
 
   void visitLocation(class Agent &agent) const;
 
- private:
+  // Expose map limits
   Vector2 tl;
   Vector2 br;
+
+ private:
   float resolution;
 
   size_t sizeX;

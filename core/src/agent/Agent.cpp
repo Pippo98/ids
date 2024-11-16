@@ -66,6 +66,13 @@ Agent::~Agent() {}
 
 void Agent::Step(float deltaTime) {
   stepDT = deltaTime;
+
+  // Update position every 2 seconds
+  if(GetTime() - lastTime > 1) {
+    lastTime = GetTime();
+    MoveRandomly();
+  }
+
   if ((Vector3Distance(this->position, this->targetPosition) <= 10)) {
     this->isOnTarget = true;
   } else {
@@ -107,6 +114,11 @@ void Agent::Step(float deltaTime) {
 
 void Agent::UpdateMap() { this->posMap.visitLocation(*this); }
 
+void Agent::Draw() {
+  DrawCircle(targetPosition.x, targetPosition.y, 5, BLUE);
+
+}
+
 void Agent::BroadcastPosition() {
   // TODO: Randomize intervals
   auto time = GetTime();
@@ -119,7 +131,24 @@ void Agent::BroadcastPosition() {
 
 void Agent::Move() {
   this->position =
-      Vector3MoveTowards(this->position, this->targetPosition, 100 * stepDT);
+      Vector3MoveTowards(this->position, this->targetPosition, 10 * stepDT);
+}
+void Agent::MoveRandomly() {
+
+  // Generate a random angle between -45 and 45 degrees
+  double angle = (rand() % 90) - 45;
+  moveAngle += angle * DEG2RAD;
+
+  // Generate a fixed Vector3 with the angle displaced 50 pixel from the agent position
+  Vector3 newPos = this->position;
+  newPos.x = newPos.x + 100 * cos(moveAngle);
+  newPos.y = newPos.y + 100 * sin(moveAngle);
+
+
+  // // Ensure the move is within bounds
+  if (newPos.x >= posMap.tl.x && newPos.x <= posMap.br.x && newPos.y >= posMap.br.y && newPos.y <= posMap.tl.y) {
+    this->targetPosition = newPos;
+  }
 }
 
 bool Agent::OnMessage(Message &message) {
@@ -165,6 +194,9 @@ void Agent::SolveVoronoi() {
     cell.calculateCenterOfMass(posMap);
   }
   auto com = solver.getVoronoi(myVoronoiID).getLastCenterOfMass();
-  targetPosition.x = com.x;
-  targetPosition.y = com.y;
+
+  // Update target position based on center of Mass
+
+  // targetPosition.x = com.x;
+  // targetPosition.y = com.y;
 }

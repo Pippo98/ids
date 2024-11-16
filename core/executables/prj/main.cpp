@@ -34,14 +34,14 @@ int main(void) {
 
   auto agent2pos = Vector3{0, 0, 0};
   Agent agent = Agent(Vector3{10, 0, 0}, map, "Tony", &broker);
-  // Agent agent2 = Agent(agent2pos, map, "Berto", &broker);
-  // Agent agent3 = Agent(Vector3{10, 0, 0}, map, "Pippo", &broker);
+  Agent agent2 = Agent(agent2pos, map, "Berto", &broker);
+  Agent agent3 = Agent(Vector3{10, 0, 0}, map, "Pippo", &broker);
 
   // Craete a list of Agents
   std::vector<Agent *> agents;
   agents.push_back(&agent);
-  // agents.push_back(&agent2);
-  // agents.push_back(&agent3);
+  agents.push_back(&agent2);
+  agents.push_back(&agent3);
 
   while (!WindowShouldClose()) {
     HandleKeyboardInput(player, agent2pos, camera);
@@ -50,7 +50,7 @@ int main(void) {
 
     camera.target.x = player.x;
     camera.target.y = player.y;
-    agent.SetTargetPosition(Vector3{player.x, player.y, 0});
+    // agent.SetTargetPosition(Vector3{player.x, player.y, 0});
     // agent2.SetTargetPosition(agent2pos);
 
     // FLOW
@@ -79,11 +79,11 @@ int main(void) {
       for (float y = br.y; y < tl.y; y += res) {
         float conf = map.getConfidence((Vector2){x, y});
         if (conf > 0) {
-          Color green = DARKGREEN;
+          auto green = DARKGREEN;
           green.a = conf;
           DrawRectangle(x, y, res, res, green);
         } else if (conf < 0) {
-          Color red = RED;
+          auto red = RED;
           red.a = -(2.55 * conf);
           DrawRectangle(x, y, res, res, red);
         }
@@ -104,6 +104,7 @@ int main(void) {
 
     for (auto &a : agents) {
       DrawAgent(*a);
+      a->Draw();
     }
 
     EndMode2D();
