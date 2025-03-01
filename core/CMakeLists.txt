@@ -2,6 +2,8 @@ message("[CORE]")
 
 set(CDIR ${CMAKE_CURRENT_LIST_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${DIR}/bin/core)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 include_directories(
   ${EXTERNAL_DIRS}
