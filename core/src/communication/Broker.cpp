@@ -4,48 +4,22 @@
 
 #include "communication/Clients.hpp"
 
-Broker::Broker() {}
-
-Broker::~Broker() {}
-
-std::vector<ICommunicationClient *> FilterClients(
-    std::vector<ICommunicationClient *> clients, Vector3 senderPosition) {
-  // Filter clients based on the relative positions of the agents
-  float distance = 100.0f;
-
-  std::vector<ICommunicationClient *> filteredClients;
-
-  // Belle le cose di Fil se solo funzionassero anche agli altri! 
-  /*std::copy_if(clients.begin(), clients.end(),*/
-  /*             std::back_inserter(filteredClients),*/
-  /*             [distance, senderPosition](ICommunicationClient *client) {*/
-  /*               return true;*/
-  /**/
-  /*               // Filter clients based on the distance*/
-  /*               return Vector3Distance(client->GetClientPosition(),*/
-  /*                                      senderPosition) < distance;*/
-  /*             });*/
-
-  for (auto client : clients) {
-    if (Vector3Distance(client->GetClientPosition(), senderPosition) <
-      distance) {
-      filteredClients.push_back(client);
-    }
-  }
-  
-
-  return filteredClients;
-};
+bool communicationIsFeasible(ICommunicationClient *client,
+                             const auto &senderPosition) {
+  constexpr float distance = 100.0f;
+  return Vector3Distance(client->GetClientPosition(), senderPosition) <
+         distance;
+}
 
 void Broker::BroadcastMessage(ICommunicationClient *client, Message &message) {
   const std::string &name = client->GetClientName();
   const Vector3 &position = client->GetClientPosition();
 
-  // Set the sender of the message
   message.sender = name;
 
-  for (auto client : FilterClients(this->clients, position)) {
-    if (client->GetClientName() != name) {
+  for (const auto &client : clients) {
+    if (communicationIsFeasible(client, position) &&
+        client->GetClientName() != name) {
       client->OnMessage(message);
     }
   }

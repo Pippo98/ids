@@ -32,10 +32,10 @@ int main(void) {
   Broker broker;
   // Init Agents
 
-  auto agent2pos = Vector3{0, 0, 0};
-  Agent agent = Agent(Vector3{10, 0, 0}, map, "Tony", &broker);
-  Agent agent2 = Agent(agent2pos, map, "Berto", &broker);
-  Agent agent3 = Agent(Vector3{10, 0, 0}, map, "Pippo", &broker);
+  Vector3 agent2pos{0, 0, 0};
+  Agent agent(Vector3{10, 0, 0}, map, "Tony", &broker);
+  Agent agent2(agent2pos, map, "Berto", &broker);
+  Agent agent3(Vector3{10, 0, 0}, map, "Pippo", &broker);
 
   // Craete a list of Agents
   std::vector<Agent *> agents;

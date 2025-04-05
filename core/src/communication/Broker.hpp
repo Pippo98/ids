@@ -11,10 +11,12 @@ struct ClientPosition {
 
 class Broker {
  public:
-  /**
-   * Constructor of Broker
-   */
-  Broker();
+  Broker() = default;
+  ~Broker() = default;
+  Broker(Broker &&) = default;
+  Broker(const Broker &) = default;
+  Broker &operator=(Broker &&) = default;
+  Broker &operator=(const Broker &) = default;
 
   /**
    * Register a new client (Agent) to the broker
@@ -29,22 +31,4 @@ class Broker {
  private:
   // List of registered clients
   std::vector<ICommunicationClient *> clients;
-
- public:
-  /**
-   * Default Constructors
-   */
-  Broker(Broker &&) = default;
-  Broker(const Broker &) = default;
-
-  /**
-   * Default Operators
-   */
-  Broker &operator=(Broker &&) = default;
-  Broker &operator=(const Broker &) = default;
-
-  /**
-   * Destructor Definition
-   */
-  ~Broker();
 };
