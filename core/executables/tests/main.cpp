@@ -69,7 +69,11 @@ int main(void) {
     return jacobianF;
   };
   auto measureJacobianFunction = [](const Eigen::VectorXd &state,
+                                    const Eigen::VectorXd &inputs,
                                     void *userData) {
+    (void)state;
+    (void)inputs;
+    (void)userData;
     Eigen::MatrixXd jacobianH(2, 4);
     jacobianH.setZero();
     jacobianH(0, 0) = 1;

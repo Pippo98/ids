@@ -1,5 +1,6 @@
 #include "Agent.hpp"
 
+#include "Eigen/src/Core/Matrix.h"
 #include "communication/Broker.hpp"
 #include "communication/Message.hpp"
 #include "map/Map.hpp"
@@ -24,6 +25,7 @@ void constructAgentUKF(UnscentedKalmanFilter &ukf) {
   };
   auto measurementFunction = [](const Eigen::VectorXd &state,
                                 const Eigen::VectorXd &inputs, void *userData) {
+    (void)inputs;
     (void)userData;
     Eigen::VectorXd measures(3);
     measures(0) = state(0);
@@ -34,12 +36,17 @@ void constructAgentUKF(UnscentedKalmanFilter &ukf) {
 
   Eigen::VectorXd state(6);
   state.setZero();
-  state(1) = state(3) = state(5) = 1.0;
+  // state initialization
+  state(1) = state(3) = state(5) = 0.0;
   Eigen::MatrixXd P(6, 6);
   P.setIdentity();
   P *= 0.1;
 
-  auto Q = P;
+  Eigen::MatrixXd Q(6, 6);
+  Q.setZero();
+  Q(0, 0) = Q(2, 2) = Q(4, 4) = 0.1;   // covariance position-position
+  Q(0, 1) = Q(2, 3) = Q(4, 3) = 0.01;  // covariance of position-speed
+  Q(1, 1) = Q(3, 3) = Q(3, 3) = 0.01;  // covariance of speed-speed
 
   Eigen::MatrixXd R(3, 3);
   R.setIdentity();

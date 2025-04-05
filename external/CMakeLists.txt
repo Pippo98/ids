@@ -13,5 +13,7 @@ set(EXTERNAL_DIRS ${EXTERNAL_DIRS} PARENT_SCOPE)
 
 # raylib
 add_subdirectory(raylib)
+target_compile_options(raylib PRIVATE -w)
+
 set(BUILD_SHARED_LIBS ON)
 add_subdirectory(kflib)

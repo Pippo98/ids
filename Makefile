@@ -1,4 +1,5 @@
 MAKEFLAGS += --no-print-directory
+CORES = $(shell nproc)
 
 .PHONY: release debug format clean
 
@@ -10,7 +11,7 @@ debug:
 	mkdir -p debug; \
 	cd debug; \
  	cmake .. -DCMAKE_BUILD_TYPE=Debug; \
-	make -j${nproc};
+	make -j$(CORES);
 
 release:
 	@if [ -d bin ]; then \
@@ -20,7 +21,7 @@ release:
 	mkdir -p release; \
 	cd release; \
 	cmake .. -DCMAKE_BUILD_TYPE=Release; \
-	make -j${nproc};
+	make -j$(CORES);
 
 clean:
 	@if [ -d .generated ]; then \
