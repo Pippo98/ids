@@ -44,8 +44,7 @@ class Agent : public ICommunicationClient {
    * @param Broker: Broker instance to communicate with other actors
    */
 
-  Agent(Vector3 initialPosition, const Map &map, std::string name,
-        Broker *broker);
+  Agent(Vector3 initialPosition, Map &map, std::string name, Broker *broker);
 
   /**
    * Internal step function
@@ -95,14 +94,13 @@ class Agent : public ICommunicationClient {
 
   void Draw();
 
-
   /***********************
    * Getters and Setters *
    ***********************/
 
-  Vector3 GetPosition() { return this->position; };
+  Vector3 GetPosition() const { return this->position; };
 
-  double GetWatchRadius() { return this->watchRadius; };
+  double GetWatchRadius() const { return this->watchRadius; };
 
   // Interface GetPosition implementation
   Vector3 GetClientPosition() override { return GetPosition(); };
@@ -124,7 +122,7 @@ class Agent : public ICommunicationClient {
   float stepDT;
   // Current exact position of Agent
   Vector3 position;
-  const Map &posMap;
+  Map &posMap;
   double watchRadius = 100;
   size_t myVoronoiID;
 
@@ -150,7 +148,7 @@ class Agent : public ICommunicationClient {
   bool agreement = false;
   std::map<std::string, AgentsPositions> agentsPositions;
 
- // Timing
+  // Timing
   double lastTime = 0;
 
  public:

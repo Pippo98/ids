@@ -60,8 +60,7 @@ void constructAgentUKF(UnscentedKalmanFilter &ukf) {
   ukf.setMeasurementFunction(measurementFunction);
 }
 
-Agent::Agent(Vector3 position, const Map &posMap, std::string name,
-             Broker *broker)
+Agent::Agent(Vector3 position, Map &posMap, std::string name, Broker *broker)
     : position(position), posMap(posMap), name(name), broker(broker) {
   this->broker->RegisterClient(this);
   this->solver = VoronoiSolver();
@@ -74,8 +73,8 @@ Agent::~Agent() {}
 void Agent::Step(float deltaTime) {
   stepDT = deltaTime;
 
-  // Update position every 2 seconds
-  if(GetTime() - lastTime > 1) {
+  // Update position every X seconds
+  if (GetTime() - lastTime > 1) {
     lastTime = GetTime();
     MoveRandomly();
   }
@@ -121,10 +120,7 @@ void Agent::Step(float deltaTime) {
 
 void Agent::UpdateMap() { this->posMap.visitLocation(*this); }
 
-void Agent::Draw() {
-  DrawCircle(targetPosition.x, targetPosition.y, 5, BLUE);
-
-}
+void Agent::Draw() { DrawCircle(targetPosition.x, targetPosition.y, 5, BLUE); }
 
 void Agent::BroadcastPosition() {
   // TODO: Randomize intervals
@@ -141,19 +137,19 @@ void Agent::Move() {
       Vector3MoveTowards(this->position, this->targetPosition, 10 * stepDT);
 }
 void Agent::MoveRandomly() {
-
   // Generate a random angle between -45 and 45 degrees
   double angle = (rand() % 90) - 45;
   moveAngle += angle * DEG2RAD;
 
-  // Generate a fixed Vector3 with the angle displaced 50 pixel from the agent position
+  // Generate a fixed Vector3 with the angle displaced 50 pixel from the agent
+  // position
   Vector3 newPos = this->position;
   newPos.x = newPos.x + 100 * cos(moveAngle);
   newPos.y = newPos.y + 100 * sin(moveAngle);
 
-
   // // Ensure the move is within bounds
-  if (newPos.x >= posMap.tl.x && newPos.x <= posMap.br.x && newPos.y >= posMap.br.y && newPos.y <= posMap.tl.y) {
+  if (newPos.x >= posMap.tl.x && newPos.x <= posMap.br.x &&
+      newPos.y >= posMap.br.y && newPos.y <= posMap.tl.y) {
     this->targetPosition = newPos;
   }
 }
@@ -193,7 +189,7 @@ void Agent::SolveVoronoi() {
   solver.getVoronoi(myVoronoiID).setPosition((Vector2){position.x, position.y});
 
   for (auto &[name, data] : agentsPositions) {
-    data.kf.KalmanFilterBase::predict();
+    data.kf.predict();
     solver.getVoronoi(data.voronoiId).setPosition(data.getPosition2D());
   }
   this->solver.solve();

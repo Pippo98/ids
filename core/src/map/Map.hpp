@@ -1,10 +1,13 @@
 #pragma once
 
 #include <cstddef>
+#include <vector>
 
 #include "raylib.h"
 
 enum class TileType { EMPTY, VISITED, OBSTACLE };
+
+class Agent;
 
 class Map {
  public:
@@ -15,14 +18,14 @@ class Map {
   float getConfidence(Vector2 position) const;
   TileType getTileType(Vector2 position) const;
 
-  void setTileType(Vector2 position, TileType type) const;
-  void setConfidence(Vector2 position, float confidence) const;
+  void setTileType(Vector2 position, TileType type);
+  void setConfidence(Vector2 position, float confidence);
 
   float getResolution() const { return resolution; };
   Vector2 getTopLeftCorner() const { return tl; };
   Vector2 getBottomRightCorner() const { return br; };
 
-  void visitLocation(class Agent &agent) const;
+  void visitLocation(const Agent &agent);
 
   // Expose map limits
   Vector2 tl;
@@ -34,15 +37,22 @@ class Map {
   size_t sizeX;
   size_t sizeY;
 
-  float *confidenceMap;
-  TileType *tileTypeMap;
+  std::vector<float> confidenceMap;
+  std::vector<TileType> tileTypeMap;
 
  private:
   size_t mapX(float x) const;
   size_t mapY(float y) const;
 
   template <typename ArrType>
-  ArrType &mapAtPosition(ArrType *arr, Vector2 position) const;
+  const ArrType &mapAtIndex(const std::vector<ArrType> &arr, size_t column,
+                            size_t row) const;
   template <typename ArrType>
-  ArrType &mapAtIndex(ArrType *arr, size_t column, size_t row) const;
+  ArrType &mapAtIndex(std::vector<ArrType> &arr, size_t column,
+                      size_t row) const;
+  template <typename ArrType>
+  const ArrType &mapAtPosition(const std::vector<ArrType> &arr,
+                               Vector2 position) const;
+  template <typename ArrType>
+  ArrType &mapAtPosition(std::vector<ArrType> &arr, Vector2 position) const;
 };
