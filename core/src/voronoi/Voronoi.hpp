@@ -28,6 +28,11 @@ class Voronoi {
   struct intersection_t {
     segment_t segment;
     Voronoi *with;
+    intersection_t(const Vector2 &p1, const Vector2 &p2, Voronoi *_with) {
+      segment.p1 = p1;
+      segment.p2 = p2;
+      with = _with;
+    }
   };
 
  private:
@@ -44,7 +49,7 @@ class VoronoiSolver {
  public:
   size_t addVoronoi(const Voronoi &voronoi);
   size_t addVoronoi(Vector2 position, double maxRadius);
-  const std::map<size_t, Voronoi> &getCells() const { return cells; };
+  const std::vector<Voronoi> &getCells() const { return cells; };
 
   bool solve();
   void draw() const;
@@ -56,8 +61,7 @@ class VoronoiSolver {
   void removeBoundsIntersections();
 
  private:
-  size_t idCounter;
-  std::map<size_t, Voronoi> cells;
+  std::vector<Voronoi> cells;
 };
 
 VoronoiSolver VoronoiTest();
