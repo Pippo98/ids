@@ -14,10 +14,9 @@ bool communicationIsFeasible(ICommunicationClient *client,
 
 void Broker::EnqueBroadcastMessage(ICommunicationClient *sender,
                                    Message &message) {
-  const std::string &senderName = sender->GetClientName();
   const Vector3 &senderPosition = sender->GetClientPosition();
 
-  message.sender = senderName;
+  message.sender = sender->GetClientName();
 
   for (size_t i = 0; i < clients.size(); i++) {
     const auto &receiver = clients[i];
@@ -25,17 +24,17 @@ void Broker::EnqueBroadcastMessage(ICommunicationClient *sender,
       continue;
     }
     if (communicationIsFeasible(receiver, senderPosition)) {
-      messages[i].push_back(message);
+      clientsMessages[i].push_back(message);
     }
   }
 }
 
 void Broker::DispatchMessages() {
-  for (size_t i = 0; i < messages.size(); i++) {
-    for (size_t j = 0; j < messages[i].size(); j++) {
-      clients[i]->OnMessage(messages[i][j]);
+  for (size_t i = 0; i < clientsMessages.size(); i++) {
+    for (size_t j = 0; j < clientsMessages[i].size(); j++) {
+      clients[i]->OnMessage(clientsMessages[i][j]);
     }
-    messages[i].clear();
+    clientsMessages[i].clear();
   }
 }
 

@@ -25,7 +25,7 @@ class Broker {
    */
   void RegisterClient(ICommunicationClient *client) {
     clients.push_back(client);
-    messages.resize(clients.size());
+    clientsMessages.resize(clients.size());
   }
 
   void EnqueBroadcastMessage(ICommunicationClient *sender, Message &message);
@@ -36,5 +36,5 @@ class Broker {
  private:
   // List of registered clients
   std::vector<ICommunicationClient *> clients;
-  std::vector<std::vector<Message>> messages;
+  std::vector<std::vector<Message>> clientsMessages;
 };
