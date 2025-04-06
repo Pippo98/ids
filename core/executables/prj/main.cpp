@@ -32,10 +32,10 @@ int main(void) {
   Broker broker;
   // Init Agents
 
-  Vector3 agent2pos{0, 0, 0};
+  Vector3 agent2pos{-10, 0, 0};
   Agent agent(Vector3{10, 0, 0}, map, "Tony", &broker);
   Agent agent2(agent2pos, map, "Berto", &broker);
-  Agent agent3(Vector3{10, 0, 0}, map, "Pippo", &broker);
+  Agent agent3(Vector3{0, -1, 0}, map, "Pippo", &broker);
 
   // Craete a list of Agents
   std::vector<Agent *> agents;
@@ -83,12 +83,12 @@ int main(void) {
           green.a = conf;
           DrawRectangle(x, y, res, res, green);
         } else if (conf < 0) {
-          auto red = RED;
+          auto red = SKYBLUE;
           red.a = -(2.55 * conf);
           DrawRectangle(x, y, res, res, red);
         }
         if (map.getTileType((Vector2){x, y}) == TileType::VISITED)
-          DrawRectangle(x, y, res, res, RED);
+          DrawRectangle(x, y, res, res, SKYBLUE);
       }
     }
     Vector2 dimension{br.x - tl.x, tl.y - br.y};
@@ -101,11 +101,13 @@ int main(void) {
     for (auto &a : agents) {
       a->Step(deltaTime);
     }
+    broker.DispatchMessages();
 
     for (auto &a : agents) {
       DrawAgent(*a);
-      a->Draw();
     }
+
+    broker.Draw();
 
     EndMode2D();
 
@@ -118,6 +120,7 @@ int main(void) {
 void DrawAgent(Agent &agent) {
   DrawEllipse(agent.GetPosition().x, agent.GetPosition().y, 10.0, 10.0, RED);
   agent.DrawVoronoi();
+  agent.Draw();
 }
 
 void HandleKeyboardInput(Rectangle &player, Vector3 &agent2pos,

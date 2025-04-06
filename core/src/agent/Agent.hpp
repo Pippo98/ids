@@ -16,11 +16,11 @@ struct AgentsPositions {
   bool isTarget;
   Vector2 getPosition2D() const {
     const auto &state = kf.getState();
-    return (Vector2){(float)state(0), (float)state(2)};
+    return Vector2{(float)state(0), (float)state(2)};
   }
   Vector3 getPosition3D() const {
     const auto &state = kf.getState();
-    return (Vector3){(float)state(0), (float)state(2), (float)state(4)};
+    return Vector3{(float)state(0), (float)state(2), (float)state(4)};
   }
 };
 

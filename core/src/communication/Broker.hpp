@@ -1,5 +1,6 @@
 #pragma once
 
+#include <queue>
 #include <vector>
 
 #include "Clients.hpp"
@@ -23,12 +24,17 @@ class Broker {
    * @param ICommunicationClient: The client to register
    */
   void RegisterClient(ICommunicationClient *client) {
-    this->clients.push_back(client);
+    clients.push_back(client);
+    messages.resize(clients.size());
   }
 
-  void BroadcastMessage(ICommunicationClient *, Message &message);
+  void EnqueBroadcastMessage(ICommunicationClient *sender, Message &message);
+  void DispatchMessages();
+
+  void Draw() const;
 
  private:
   // List of registered clients
   std::vector<ICommunicationClient *> clients;
+  std::vector<std::vector<Message>> messages;
 };

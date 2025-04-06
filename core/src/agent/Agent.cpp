@@ -4,6 +4,7 @@
 #include "communication/Broker.hpp"
 #include "communication/Message.hpp"
 #include "map/Map.hpp"
+#include "raylib.h"
 #include "raymath.h"
 #include "voronoi/Voronoi.hpp"
 
@@ -44,9 +45,9 @@ void constructAgentUKF(UnscentedKalmanFilter &ukf) {
 
   Eigen::MatrixXd Q(6, 6);
   Q.setZero();
-  Q(0, 0) = Q(2, 2) = Q(4, 4) = 0.1;   // covariance position-position
+  Q(0, 0) = Q(2, 2) = Q(4, 4) = 0.3;   // covariance position-position
   Q(0, 1) = Q(2, 3) = Q(4, 3) = 0.01;  // covariance of position-speed
-  Q(1, 1) = Q(3, 3) = Q(3, 3) = 0.01;  // covariance of speed-speed
+  Q(1, 1) = Q(3, 3) = Q(3, 3) = 0.2;   // covariance of speed-speed
 
   Eigen::MatrixXd R(3, 3);
   R.setIdentity();
@@ -76,8 +77,11 @@ void Agent::Step(float deltaTime) {
   // Update position every X seconds
   if (GetTime() - lastTime > 1) {
     lastTime = GetTime();
-    MoveRandomly();
+    /*MoveRandomly();*/
   }
+
+  SolveVoronoi();
+  Move();
 
   if ((Vector3Distance(this->position, this->targetPosition) <= 10)) {
     this->isOnTarget = true;
@@ -86,7 +90,7 @@ void Agent::Step(float deltaTime) {
   }
 
   if (isOnTarget) {
-    bool allOnTarget = false;
+    bool allOnTarget = true;
     for (const auto &[name, pos] : agentsPositions) {
       allOnTarget = allOnTarget && pos.isTarget;
     }
@@ -97,13 +101,11 @@ void Agent::Step(float deltaTime) {
       Message message;
       message.type = Message::AGREEMENT;
       message.data.startAgreementProcess = true;
-      this->broker->BroadcastMessage(this, message);
+      this->broker->EnqueBroadcastMessage(this, message);
     }
   } else {
-    Move();
   }
 
-  SolveVoronoi();
   UpdateMap();
 
   if (isAgreeing) {
@@ -120,7 +122,10 @@ void Agent::Step(float deltaTime) {
 
 void Agent::UpdateMap() { this->posMap.visitLocation(*this); }
 
-void Agent::Draw() { DrawCircle(targetPosition.x, targetPosition.y, 5, BLUE); }
+void Agent::Draw() {
+  DrawCircle(position.x, position.y, 4, ORANGE);
+  DrawCircle(targetPosition.x, targetPosition.y, 5, BLUE);
+}
 
 void Agent::BroadcastPosition() {
   // TODO: Randomize intervals
@@ -128,17 +133,21 @@ void Agent::BroadcastPosition() {
   if (time - this->lastUpdateTime > 1) {
     this->lastUpdateTime = time;
     Message message = CreatePositionMessage(this->position, this->isOnTarget);
-    this->broker->BroadcastMessage(this, message);
+    this->broker->EnqueBroadcastMessage(this, message);
   }
 }
 
 void Agent::Move() {
+  /*solver.getVoronoi(myVoronoiID).calculateCenterOfMass();*/
+  Vector2 com = solver.getVoronoi(myVoronoiID).getLastCenterOfMass();
+  this->targetPosition.x = com.x;
+  this->targetPosition.y = com.y;
   this->position =
       Vector3MoveTowards(this->position, this->targetPosition, 10 * stepDT);
 }
 void Agent::MoveRandomly() {
   // Generate a random angle between -45 and 45 degrees
-  double angle = (rand() % 90) - 45;
+  double angle = (rand() % 360) - 45;
   moveAngle += angle * DEG2RAD;
 
   // Generate a fixed Vector3 with the angle displaced 50 pixel from the agent
@@ -147,7 +156,7 @@ void Agent::MoveRandomly() {
   newPos.x = newPos.x + 100 * cos(moveAngle);
   newPos.y = newPos.y + 100 * sin(moveAngle);
 
-  // // Ensure the move is within bounds
+  // Ensure the move is within bounds
   if (newPos.x >= posMap.tl.x && newPos.x <= posMap.br.x &&
       newPos.y >= posMap.br.y && newPos.y <= posMap.tl.y) {
     this->targetPosition = newPos;
@@ -161,20 +170,20 @@ bool Agent::OnMessage(Message &message) {
           agentsPositions.find(message.sender) == agentsPositions.end();
       auto &agentData = agentsPositions[message.sender];
       UnscentedKalmanFilter &kf = agentsPositions[message.sender].kf;
+
       if (newAgent) {
         agentData.name = message.sender;
         constructAgentUKF(kf);
         kf.setUserData(&stepDT);
-        kf.KalmanFilterBase::predict();
+        kf.predict();
         size_t newVoronoiID =
-            solver.addVoronoi((Vector2){0.0f, 0.0f}, watchRadius);
+            solver.addVoronoi(Vector2{0.0f, 0.0f}, watchRadius);
         agentData.voronoiId = newVoronoiID;
       }
+
       kf.update(Eigen::Vector3d(message.data.agentPosition.position.x,
                                 message.data.agentPosition.position.y,
                                 message.data.agentPosition.position.z));
-      solver.getVoronoi(agentData.voronoiId)
-          .setPosition(agentData.getPosition2D());
       return true;
     }
     case Message::AGREEMENT:
@@ -186,21 +195,17 @@ bool Agent::OnMessage(Message &message) {
 }
 
 void Agent::SolveVoronoi() {
-  solver.getVoronoi(myVoronoiID).setPosition((Vector2){position.x, position.y});
+  solver.getVoronoi(myVoronoiID).setPosition(Vector2{position.x, position.y});
 
   for (auto &[name, data] : agentsPositions) {
     data.kf.predict();
     solver.getVoronoi(data.voronoiId).setPosition(data.getPosition2D());
   }
+
   this->solver.solve();
+
   const auto &cells = solver.getCells();
   for (size_t i = 0; i < cells.size(); i++) {
     cells[i].calculateCenterOfMass(posMap);
   }
-  auto com = solver.getVoronoi(myVoronoiID).getLastCenterOfMass();
-
-  // Update target position based on center of Mass
-
-  // targetPosition.x = com.x;
-  // targetPosition.y = com.y;
 }

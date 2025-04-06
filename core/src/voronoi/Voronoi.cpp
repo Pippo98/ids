@@ -80,7 +80,13 @@ void Voronoi::calculateCenterOfMass(const Map &map) const {
     if (!pointInVoronoi(sample)) {
       continue;
     }
-    float density = getDensity(map, sample);
+    float density = 0.0f;
+    if (sample.x <= map.getBottomRightCorner().x &&
+        sample.x >= map.getTopLeftCorner().x &&
+        sample.y >= map.getBottomRightCorner().y &&
+        sample.y <= map.getTopLeftCorner().y) {
+      density = getDensity(map, sample);
+    }
     mass += density;
     centerOfMass.x += density * sample.x;
     centerOfMass.y += density * sample.y;
