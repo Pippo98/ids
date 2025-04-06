@@ -8,13 +8,13 @@
 bool communicationIsFeasible(ICommunicationClient *client,
                              const auto &senderPosition) {
   constexpr float distance = 150.0f;
-  return Vector3Distance(client->GetClientPosition(), senderPosition) <
+  return Vector2Distance(client->GetClientPosition(), senderPosition) <
          distance;
 }
 
 void Broker::EnqueBroadcastMessage(ICommunicationClient *sender,
                                    Message &message) {
-  const Vector3 &senderPosition = sender->GetClientPosition();
+  const Vector2 &senderPosition = sender->GetClientPosition();
 
   message.sender = sender->GetClientName();
 

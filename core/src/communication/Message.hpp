@@ -5,7 +5,7 @@
 #include <string>
 
 struct AgentPosition {
-  Vector3 position;
+  Vector2 position;
   bool isTarget;
 };
 
@@ -21,4 +21,4 @@ struct Message {
   MessageData data;
 };
 
-Message CreatePositionMessage(Vector3, bool);
+Message CreatePositionMessage(Vector2, bool);

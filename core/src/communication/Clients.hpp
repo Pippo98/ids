@@ -13,10 +13,10 @@
 
 class ICommunicationClient {
  public:
-  virtual ~ICommunicationClient() {};
+  virtual ~ICommunicationClient(){};
 
   virtual std::string GetClientName() = 0;
-  virtual Vector3 GetClientPosition() = 0;
+  virtual Vector2 GetClientPosition() = 0;
 
   virtual bool OnMessage(Message &) = 0;
 };

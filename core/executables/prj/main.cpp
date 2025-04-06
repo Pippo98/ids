@@ -37,11 +37,11 @@ int main(void) {
   // Craete a list of Agents
   std::vector<std::shared_ptr<Agent>> agents;
   agents.push_back(
-      std::make_shared<Agent>(Vector3{10, 0, 0}, map, "Tony", &broker));
+      std::make_shared<Agent>(Vector2{10, 0}, map, "Tony", &broker));
   agents.push_back(
-      std::make_shared<Agent>(Vector3{-10, 0, 0}, map, "Berto", &broker));
+      std::make_shared<Agent>(Vector2{-10, 0}, map, "Berto", &broker));
   agents.push_back(
-      std::make_shared<Agent>(Vector3{0, -1, 0}, map, "Pippo", &broker));
+      std::make_shared<Agent>(Vector2{0, -1}, map, "Pippo", &broker));
 
   while (!WindowShouldClose()) {
     HandleKeyboardInput(player, camera);

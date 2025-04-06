@@ -1,6 +1,6 @@
 #include "Message.hpp"
 
-Message CreatePositionMessage(Vector3 position, bool isTarget = false) {
+Message CreatePositionMessage(Vector2 position, bool isTarget = false) {
   Message message;
 
   message.type = Message::POSITION;
