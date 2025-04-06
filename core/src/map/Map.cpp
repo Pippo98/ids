@@ -86,37 +86,28 @@ void Map::setConfidence(Vector2 position, float confidence) {
 }
 
 void Map::visitLocation(const Agent &agent) {
-  if (getTileType({agent.GetPosition().x, agent.GetPosition().y}) ==
-      TileType::EMPTY) {
-    setTileType({agent.GetPosition().x, agent.GetPosition().y},
-                TileType::VISITED);
+  const Vector2 agentPosXY = {agent.GetPosition().x, agent.GetPosition().y};
+  if (getTileType(agentPosXY) == TileType::EMPTY) {
+    setTileType(agentPosXY, TileType::VISITED);
   }
-  std::vector<float *> visited;
   // Update confidence of nearby tiles with a gaussian distribution around the
   // agent with radius watchRadius
-  for (float x = agent.GetPosition().x - agent.GetWatchRadius();
-       x < agent.GetPosition().x + agent.GetWatchRadius(); x += 0.5) {
-    for (float y = agent.GetPosition().y - agent.GetWatchRadius();
-         y < agent.GetPosition().y + agent.GetWatchRadius(); y += 0.5) {
-      float distance = Vector2Distance(
-          {x, y}, {agent.GetPosition().x, agent.GetPosition().y});
-      float confidence = -(1 - distance / agent.GetWatchRadius());
+  for (float x = agentPosXY.x - agent.GetWatchRadius();
+       x < agentPosXY.x + agent.GetWatchRadius(); x += resolution) {
+    for (float y = agentPosXY.y - agent.GetWatchRadius();
+         y < agentPosXY.y + agent.GetWatchRadius(); y += resolution) {
+      const Vector2 tile = {x, y};
+      const float distance = Vector2Distance(tile, agentPosXY);
 
       if (distance < agent.GetWatchRadius()) {
-        // TODO: Fix performance issue
-        if (std::find(visited.begin(), visited.end(),
-                      &mapAtPosition(confidenceMap, {x, y})) != visited.end()) {
-          continue;
-        }
+        const float confidence = -(1 - distance / agent.GetWatchRadius());
 
-        visited.push_back(&mapAtPosition(confidenceMap, {x, y}));
-
-        float currentConfidence = getConfidence({x, y});
+        float currentConfidence = getConfidence(tile);
         float newConfidence = currentConfidence + confidence;
         if (newConfidence < -100) {
-          setConfidence({x, y}, -100);
+          setConfidence(tile, -100);
         } else {
-          setConfidence({x, y}, newConfidence);
+          setConfidence(tile, newConfidence);
         }
       }
     }
