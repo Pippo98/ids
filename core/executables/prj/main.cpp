@@ -1,5 +1,6 @@
-#include <raylib.h>
 #include <stdio.h>
+
+#include <memory>
 
 #include "agent/Agent.hpp"
 #include "communication/Broker.hpp"
@@ -10,7 +11,8 @@
 
 void RenderFrame();
 void DrawAgent(Agent &);
-void HandleKeyboardInput(Rectangle &, Vector3 &, Camera2D &);
+void HandleKeyboardInput(Rectangle &, Camera2D &);
+void DrawMap(const Map &map);
 
 int main(void) {
   printf("IDS project\n");
@@ -20,7 +22,7 @@ int main(void) {
 
   InitWindow(screenWidth, screenHeight, "IDS");
 
-  Rectangle player = {0, 0, 0, 0};
+  Rectangle player = {0, 0, 3, 3};
   SetTargetFPS(60);
   Camera2D camera;
   camera.target = (Vector2){player.x, player.y};
@@ -32,26 +34,24 @@ int main(void) {
   Broker broker;
   // Init Agents
 
-  Vector3 agent2pos{-10, 0, 0};
-  Agent agent(Vector3{10, 0, 0}, map, "Tony", &broker);
-  Agent agent2(agent2pos, map, "Berto", &broker);
-  Agent agent3(Vector3{0, -1, 0}, map, "Pippo", &broker);
-
   // Craete a list of Agents
-  std::vector<Agent *> agents;
-  agents.push_back(&agent);
-  agents.push_back(&agent2);
-  agents.push_back(&agent3);
+  std::vector<std::shared_ptr<Agent>> agents;
+  agents.push_back(
+      std::make_shared<Agent>(Vector3{10, 0, 0}, map, "Tony", &broker));
+  agents.push_back(
+      std::make_shared<Agent>(Vector3{-10, 0, 0}, map, "Berto", &broker));
+  agents.push_back(
+      std::make_shared<Agent>(Vector3{0, -1, 0}, map, "Pippo", &broker));
 
   while (!WindowShouldClose()) {
-    HandleKeyboardInput(player, agent2pos, camera);
+    HandleKeyboardInput(player, camera);
     // Calculate delta time
     float deltaTime = GetFrameTime();
 
+    printf("Frame time: %f\n", deltaTime);
+
     camera.target.x = player.x;
     camera.target.y = player.y;
-    // agent.SetTargetPosition(Vector3{player.x, player.y, 0});
-    // agent2.SetTargetPosition(agent2pos);
 
     // FLOW
     // agent get positions of all Agents
@@ -66,37 +66,16 @@ int main(void) {
     BeginMode2D(camera);
     Vector2 mousePosition = Vector2Add(
         Vector2Divide(Vector2Subtract(GetMousePosition(), camera.offset),
-                      (Vector2){camera.zoom, camera.zoom}),
+                      Vector2{camera.zoom, camera.zoom}),
         camera.target);
 
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
       map.setConfidence(mousePosition, map.getConfidence(mousePosition) + 10);
     }
-    float res = map.getResolution();
-    Vector2 tl = map.getTopLeftCorner();
-    Vector2 br = map.getBottomRightCorner();
-    for (float x = tl.x; x < br.x; x += res) {
-      for (float y = br.y; y < tl.y; y += res) {
-        float conf = map.getConfidence((Vector2){x, y});
-        if (conf > 0) {
-          auto green = DARKGREEN;
-          green.a = conf;
-          DrawRectangle(x, y, res, res, green);
-        } else if (conf < 0) {
-          auto red = SKYBLUE;
-          red.a = -(2.55 * conf);
-          DrawRectangle(x, y, res, res, red);
-        }
-        if (map.getTileType((Vector2){x, y}) == TileType::VISITED)
-          DrawRectangle(x, y, res, res, SKYBLUE);
-      }
-    }
-    Vector2 dimension{br.x - tl.x, tl.y - br.y};
-    DrawRectangleLines(tl.x, br.y, dimension.x, dimension.y, BLACK);
 
-    DrawLine(-screenWidth * 10, 0, screenWidth * 10, 0, GREEN);
+    DrawMap(map);
 
-    DrawRectangle(player.x, player.y, player.width, player.height, BLUE);
+    DrawRectangle(player.x, player.y, player.width, player.height, BLACK);
 
     for (auto &a : agents) {
       a->Step(deltaTime);
@@ -117,14 +96,37 @@ int main(void) {
   return 0;
 }
 
+void DrawMap(const Map &map) {
+  const float &res = map.getResolution();
+  const Vector2 &tl = map.getTopLeftCorner();
+  const Vector2 &br = map.getBottomRightCorner();
+  for (float x = tl.x; x < br.x; x += res) {
+    for (float y = br.y; y < tl.y; y += res) {
+      float conf = map.getConfidence(Vector2{x, y});
+      if (conf > 0) {
+        auto green = DARKGREEN;
+        green.a = conf;
+        DrawRectangle(x, y, res, res, green);
+      } else if (conf < 0) {
+        auto red = SKYBLUE;
+        red.a = -(2.55 * conf);
+        DrawRectangle(x, y, res, res, red);
+      }
+      if (map.getTileType(Vector2{x, y}) == TileType::VISITED)
+        DrawRectangle(x, y, res, res, SKYBLUE);
+    }
+  }
+  Vector2 dimension{br.x - tl.x, tl.y - br.y};
+  DrawRectangleLines(tl.x, br.y, dimension.x, dimension.y, BLACK);
+}
+
 void DrawAgent(Agent &agent) {
   DrawEllipse(agent.GetPosition().x, agent.GetPosition().y, 10.0, 10.0, RED);
   agent.DrawVoronoi();
   agent.Draw();
 }
 
-void HandleKeyboardInput(Rectangle &player, Vector3 &agent2pos,
-                         Camera2D &camera) {
+void HandleKeyboardInput(Rectangle &player, Camera2D &camera) {
   if (IsKeyDown(KEY_W))
     player.y -= 2;
   else if (IsKeyDown(KEY_S))
@@ -133,16 +135,6 @@ void HandleKeyboardInput(Rectangle &player, Vector3 &agent2pos,
     player.x += 2;
   else if (IsKeyDown(KEY_A))
     player.x -= 2;
-  if (IsKeyDown(KEY_UP)) {
-    agent2pos.y -= 2;
-  } else if (IsKeyDown(KEY_DOWN)) {
-    agent2pos.y += 2;
-  }
-  if (IsKeyDown(KEY_RIGHT)) {
-    agent2pos.x += 2;
-  } else if (IsKeyDown(KEY_LEFT)) {
-    agent2pos.x -= 2;
-  }
   if (IsKeyDown(KEY_Q))
     camera.zoom += 0.01;
   else if (IsKeyDown(KEY_E))
