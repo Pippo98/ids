@@ -86,7 +86,8 @@ void Map::setConfidence(Vector2 position, float confidence) {
 }
 
 void Map::visitLocation(const Agent &agent) {
-  const Vector2 agentPosXY = {agent.GetPosition().x, agent.GetPosition().y};
+  const Vector2 agentPosXY{static_cast<float>(agent.GetPosition().x),
+                           static_cast<float>(agent.GetPosition().y)};
   if (getTileType(agentPosXY) == TileType::EMPTY) {
     setTileType(agentPosXY, TileType::VISITED);
   }

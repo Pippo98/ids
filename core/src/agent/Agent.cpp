@@ -78,7 +78,6 @@ void Agent::Step(float deltaTime) {
   // Update position every X seconds
   if (GetTime() - lastTime > 1) {
     lastTime = GetTime();
-    /*MoveRandomly();*/
   }
 
   SolveVoronoi();

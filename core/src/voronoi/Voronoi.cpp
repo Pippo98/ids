@@ -62,12 +62,21 @@ void Voronoi::calculateCenterOfMass() const {
     centerOfMass.x /= mass;
     centerOfMass.y /= mass;
   }
+  positiveCenterOfMass = centerOfMass;
+  negativeCenterOfMass = centerOfMass;
 }
 void Voronoi::calculateCenterOfMass(const Map &map) const {
   double mass = 0.0;
-  centerOfMass = (Vector2){0.0f, 0.0f};
+  double positiveMass = 0.0;
+  double negativeMass = 0.0;
+
+  centerOfMass = Vector2{0.0f, 0.0f};
+  positiveCenterOfMass = centerOfMass;
+  negativeCenterOfMass = centerOfMass;
+
   const size_t numberOfPoints = PI * maxRadius * maxRadius / 100.0;
   const float turnFactor = 0.61;
+
   for (size_t i = 0; i < numberOfPoints; ++i) {
     float radius = maxRadius * std::sqrt(i / (numberOfPoints - 1.0));
     float angle = 2 * PI * turnFactor * i;
@@ -86,15 +95,36 @@ void Voronoi::calculateCenterOfMass(const Map &map) const {
         sample.y >= map.getBottomRightCorner().y &&
         sample.y <= map.getTopLeftCorner().y) {
       density = getDensity(map, sample);
+    } else {
+      continue;
     }
+
     mass += density;
     centerOfMass.x += density * sample.x;
     centerOfMass.y += density * sample.y;
+
+    if (density > 0.0) {
+      positiveMass += density;
+      positiveCenterOfMass.x += density * sample.x;
+      positiveCenterOfMass.y += density * sample.y;
+    } else if (density < 0.0) {
+      negativeMass += density;
+      negativeCenterOfMass.x += density * sample.x;
+      negativeCenterOfMass.y += density * sample.y;
+    }
   }
 
   if (!FloatEquals(mass, 0.0f)) {
     centerOfMass.x /= mass;
     centerOfMass.y /= mass;
+  }
+  if (!FloatEquals(positiveMass, 0.0)) {
+    positiveCenterOfMass.x /= positiveMass;
+    positiveCenterOfMass.y /= positiveMass;
+  }
+  if (!FloatEquals(negativeMass, 0.0)) {
+    negativeCenterOfMass.x /= negativeMass;
+    negativeCenterOfMass.y /= negativeMass;
   }
 }
 
@@ -187,7 +217,7 @@ void VoronoiSolver::draw() const {
                bound.segment.p2.y, BLUE);
     }
 
-    Vector2 CenterOfMass = cell.getLastCenterOfMass();
+    Vector2 CenterOfMass = cell.getCenterOfMass();
     DrawCircle(CenterOfMass.x, CenterOfMass.y, 3.0, DARKPURPLE);
   }
 }
