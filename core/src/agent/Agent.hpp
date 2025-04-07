@@ -111,6 +111,8 @@ class Agent : public ICommunicationClient {
 
   std::string GetClientName() override { return this->name; };
 
+  const Map &GetMap() const { return posMap; }
+
  private:
   std::string name;
   size_t myVoronoiID;
@@ -128,7 +130,7 @@ class Agent : public ICommunicationClient {
   bool isOnTarget = false;
   double lastUpdateTime = 0;
 
-  Map &posMap;
+  Map posMap;
   Broker *broker;  // Used to communicate with other actors in World
   VoronoiSolver solver;
 

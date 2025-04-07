@@ -1,3 +1,8 @@
+// clang-format off
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
+// clang-format on
+
 #include <stdio.h>
 
 #include <memory>
@@ -12,7 +17,7 @@
 void RenderFrame();
 void DrawAgent(Agent &);
 void HandleKeyboardInput(Rectangle &, Camera2D &);
-void DrawMap(const Map &map);
+void DrawMap(const Map &map, unsigned char maxAlpha = 255);
 
 int main(void) {
   printf("IDS project\n");
@@ -43,6 +48,9 @@ int main(void) {
   agents.push_back(
       std::make_shared<Agent>(Vector2{0, -1}, map, "Pippo", &broker));
 
+  bool drawRealMap = true;
+  std::vector<bool> displayAgents(agents.size(), true);
+
   while (!WindowShouldClose()) {
     HandleKeyboardInput(player, camera);
     // Calculate delta time
@@ -61,42 +69,56 @@ int main(void) {
     // agent update position
 
     BeginDrawing();
-
     ClearBackground(RAYWHITE);
+    constexpr float w = 20.0;
+    constexpr float h = 20.0;
+    Rectangle position{0.0, 0.0, w, h};
+    for (size_t i = 0; i < agents.size(); i++) {
+      bool val = displayAgents[i];
+      GuiCheckBox(position, agents[i]->GetClientName().c_str(), &val);
+      displayAgents[i] = val;
+      position.y += h;
+    }
+    position.y += h;
+    GuiCheckBox(position, "Draw real map", &drawRealMap);
+
     BeginMode2D(camera);
+
     Vector2 mousePosition = Vector2Add(
         Vector2Divide(Vector2Subtract(GetMousePosition(), camera.offset),
                       Vector2{camera.zoom, camera.zoom}),
         camera.target);
-
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
       map.setConfidence(mousePosition, map.getConfidence(mousePosition) + 10);
     }
 
-    DrawMap(map);
-
-    DrawRectangle(player.x, player.y, player.width, player.height, BLACK);
-
     for (auto &a : agents) {
       a->Step(deltaTime);
+      map.visitLocation(*a);
     }
     broker.DispatchMessages();
 
-    for (auto &a : agents) {
-      DrawAgent(*a);
+    if (drawRealMap) {
+      DrawMap(map);
     }
+    for (size_t i = 0; i < agents.size(); i++) {
+      if (displayAgents[i]) {
+        DrawAgent(*(agents[i]));
+      }
+    }
+
+    DrawRectangle(player.x, player.y, player.width, player.height, BLACK);
 
     broker.Draw();
 
     EndMode2D();
-
     EndDrawing();
   }
 
   return 0;
 }
 
-void DrawMap(const Map &map) {
+void DrawMap(const Map &map, unsigned char maxAlpha) {
   const float &res = map.getResolution();
   const Vector2 &tl = map.getTopLeftCorner();
   const Vector2 &br = map.getBottomRightCorner();
@@ -104,16 +126,17 @@ void DrawMap(const Map &map) {
     for (float y = br.y; y < tl.y; y += res) {
       float conf = map.getConfidence(Vector2{x, y});
       if (conf > 0) {
-        auto green = DARKGREEN;
-        green.a = conf;
-        DrawRectangle(x, y, res, res, green);
+        auto color = Fade(DARKGREEN, conf);
+        color.a = std::min(color.a, maxAlpha);
+        DrawRectangle(x, y, res, res, color);
       } else if (conf < 0) {
-        auto red = SKYBLUE;
-        red.a = -(2.55 * conf);
-        DrawRectangle(x, y, res, res, red);
+        auto color = Fade(SKYBLUE, -2.55 * conf);
+        color.a = std::min(color.a, maxAlpha);
+        DrawRectangle(x, y, res, res, color);
       }
-      if (map.getTileType(Vector2{x, y}) == TileType::VISITED)
-        DrawRectangle(x, y, res, res, SKYBLUE);
+      /*if (map.getTileType(Vector2{x, y}) == TileType::VISITED) {*/
+      /*  DrawRectangle(x, y, res, res, SKYBLUE);*/
+      /*}*/
     }
   }
   Vector2 dimension{br.x - tl.x, tl.y - br.y};
@@ -121,6 +144,7 @@ void DrawMap(const Map &map) {
 }
 
 void DrawAgent(Agent &agent) {
+  DrawMap(agent.GetMap(), 50);
   DrawEllipse(agent.GetPosition().x, agent.GetPosition().y, 10.0, 10.0, RED);
   agent.DrawVoronoi();
   agent.Draw();
