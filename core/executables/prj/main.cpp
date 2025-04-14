@@ -1,6 +1,7 @@
 // clang-format off
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
+#include "rlgl.h"
 // clang-format on
 
 #include <stdio.h>
@@ -102,9 +103,13 @@ int main(void) {
       DrawMap(map);
     }
     for (size_t i = 0; i < agents.size(); i++) {
+      rlPushMatrix();
+      auto sz = map.getSize();
+      rlTranslatef(sz.x * (i + 1), 0.0f, 0.0f);
       if (displayAgents[i]) {
         DrawAgent(*(agents[i]));
       }
+      rlPopMatrix();
     }
 
     DrawRectangle(player.x, player.y, player.width, player.height, BLACK);

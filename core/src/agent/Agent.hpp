@@ -119,7 +119,7 @@ class Agent : public ICommunicationClient {
 
   float stepDT;
   double lastTime = 0;
-  double watchRadius = 100;
+  double watchRadius = 80;
 
   PositionModel position;
   PositionModel targetPosition;

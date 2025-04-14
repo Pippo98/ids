@@ -74,11 +74,12 @@ void Voronoi::calculateCenterOfMass(const Map &map) const {
   positiveCenterOfMass = centerOfMass;
   negativeCenterOfMass = centerOfMass;
 
-  const size_t numberOfPoints = PI * maxRadius * maxRadius / 100.0;
+  float R = 100;
+  const size_t numberOfPoints = PI * R * R / 100.0;
   const float turnFactor = 0.61;
 
   for (size_t i = 0; i < numberOfPoints; ++i) {
-    float radius = maxRadius * std::sqrt(i / (numberOfPoints - 1.0));
+    float radius = R * std::sqrt(i / (numberOfPoints - 1.0));
     float angle = 2 * PI * turnFactor * i;
 
     Vector2 sample{pos.x + radius * std::cos(angle),

@@ -67,7 +67,7 @@ Agent::Agent(PositionModel position, Map &posMap, std::string name,
              Broker *broker)
     : name(name), position(position), posMap(posMap), broker(broker) {
   this->broker->RegisterClient(this);
-  this->myVoronoiID = solver.addVoronoi(position, watchRadius);
+  this->myVoronoiID = solver.addVoronoi(position, 500);
 }
 
 Agent::~Agent() {}
@@ -88,7 +88,7 @@ void Agent::Step(float deltaTime) {
     targetPosition = controlTarget;
   }
 
-  position.Move(targetPosition, 0.5, stepDT);
+  position.Move(targetPosition, 10, stepDT);
 
   if ((Vector2Distance(this->position, this->targetPosition) <= 10)) {
     this->isOnTarget = true;
@@ -148,8 +148,7 @@ bool Agent::OnMessage(Message &message) {
         constructAgentUKF(kf);
         kf.setUserData(&stepDT);
         kf.predict();
-        size_t newVoronoiID =
-            solver.addVoronoi(Vector2{0.0f, 0.0f}, watchRadius);
+        size_t newVoronoiID = solver.addVoronoi(Vector2{0.0f, 0.0f}, 500);
         agentData.voronoiId = newVoronoiID;
       }
 

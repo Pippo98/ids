@@ -24,6 +24,7 @@ class Map {
   float getResolution() const { return resolution; };
   Vector2 getTopLeftCorner() const { return tl; };
   Vector2 getBottomRightCorner() const { return br; };
+  Vector2 getSize() const { return Vector2{br.x - tl.x, tl.y - br.y}; }
 
   void visitLocation(const Agent &agent);
 

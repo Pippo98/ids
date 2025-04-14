@@ -7,7 +7,7 @@
 
 bool communicationIsFeasible(ICommunicationClient *client,
                              const auto &senderPosition) {
-  constexpr float distance = 150.0f;
+  constexpr float distance = 550.0f;
   return Vector2Distance(client->GetClientPosition(), senderPosition) <
          distance;
 }

@@ -1,7 +1,9 @@
 #include "PositionModel.hpp"
 
+#include "raymath.h"
+
 void PositionModelXY::Move(PositionModelXY &target, double maxSpeed,
                            double dt) {
-  this->x += (target.x - x) * maxSpeed * dt;
-  this->y += (target.y - y) * maxSpeed * dt;
+  double dist = Vector2Distance(target, *this);
+  *this = Vector2MoveTowards(*this, target, std::min(dist, maxSpeed * dt));
 }
